@@ -118,43 +118,9 @@ class Host:
 		# pass
 
 
-class Board(tk.Canvas):
-	def __init__(self, master=None, w=1200, h=1200):
-		if master is None:
-			master = tk.Tk()
-			master.wm_title('PyNavon')
-		#self.my_parent = parent
-		super(Board, self).__init__(master, width=w, height=h)
-		self.pack()
+class Board:
+	def __init__(self):
 		self.top_host = self.initial_config()
-
-		self.repeat = False
-
-		def callback(event):
-			print("clicked at", event.x, event.y)
-			r = self.create_rectangle(0,0,1200,1200)
-			self.itemconfig(r, fill="white")
-
-
-			self.top_host.grow()
-			#for c in self.top_host.get_cells():
-			#	print(c.coordinate)
-
-			self.draw_host(self.top_host)
-			#if self.top_host.subsize > 15 and not self.repeat:
-			#	self.repeat = True
-			#	self.top_host.expand()
-			#self.pack()
-
-
-		def key(event):
-			print("pressed", repr(event.char))
-
-		self.bind("<Button-1>", callback)
-		self.bind("<Key>", key)
-		self.bind("<g>", self.top_host.grow)
-		self.pack()
-
 		self.draw_host(self.top_host)
 
 	def draw_host(self, host):
@@ -177,6 +143,12 @@ def draw_stuff():
 	window = pyglet.window.Window()
 	window.set_size(1200, 1200)
 
+	nvb = Board()
+	nvb.grow()
+	# for c in self.top_host.get_cells():
+	#	print(c.coordinate)
+
+	self.draw_host(self.top_host)
 	@window.event
 	def on_draw():
 		glClear(GL_COLOR_BUFFER_BIT)
@@ -184,7 +156,6 @@ def draw_stuff():
 		glRectf(120, 0, 300, 200)
 
 	pyglet.app.run()
-
 
 
 if __name__ == '__main__':
