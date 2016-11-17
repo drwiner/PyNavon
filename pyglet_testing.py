@@ -111,7 +111,7 @@ def initial_config():
 	C = Cell(np.array([10, 10]), Position(0, 0), 1200)
 	H = Host(C, word[0], 0)
 	H.expand(1)
-#	H.expand(2)
+	H.expand(2)
 	# for i in range(1, 2):
 	# 	H.expand(i)
 	return H
@@ -123,30 +123,12 @@ def draw_host(host):
 #	map(draw_cell, cells)
 
 def draw_cell(cell):
-	x, y = cell.coordinate
+	y, x = cell.coordinate
 	#print(x, y, cell.size)
-	glRectf(1200-y, 1200-x, 1200 - y + cell.size, 1200 - x + cell.size)
-	#glRectf(-10,-10,20,20)
+	glRectf(x,1200-y, x + cell.size, 1200 - y + cell.size)
 
-
-# label = pyglet.text.Label('Hello, world',
-#                           font_name='Times New Roman',
-#                           font_size=36,
-#                           x=window.width // 2, y=window.height // 2,
-#                           anchor_x='center', anchor_y='center')
 
 top_host = initial_config()
-# @window.event
-# def on_draw():
-# 	glClear(GL_COLOR_BUFFER_BIT)
-# 	glLoadIdentity()
-# 	window.clear()
-# 	time.sleep(1)
-# 	#glColor3f(float(1.0), float(0.0), float(0.0))
-# 	draw_host(top_host)
-# 	label.draw()
-
-
 
 window = pyglet.window.Window()
 window.set_size(1200, 1200)
@@ -155,10 +137,13 @@ window.set_size(1200, 1200)
 def on_draw():
 	window.clear()
 	draw_host(top_host)
+
 	#glScalef(float(-1.0), float(1.0), float(-1.0))
 
 def update(dt):
-	top_host.grow()
+	pass#top_host.grow()
+
+
 
 pyglet.clock.schedule_interval(update, 1/120.0)
 pyglet.app.run()
