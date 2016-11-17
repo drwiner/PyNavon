@@ -50,7 +50,6 @@ class Host:
 		self.position = cell.position
 		self.letter_position = i
 
-
 		#internal cells and attributes
 		k, positions = pattern
 		self.length = k
@@ -107,8 +106,6 @@ class Host:
 	def __repr__(self):
 		return str(self.coordinate) + str(self.size)
 
-
-
 		#get next letter in word
 		# Canvas()
 		#
@@ -118,39 +115,35 @@ class Host:
 		# pass
 
 
-class Board:
-	def __init__(self):
-		self.top_host = self.initial_config()
-		self.draw_host(self.top_host)
+def initial_config():
+	C = Cell(np.array([10, 10]), Position(0, 0), 1200)
+	H = Host(C, word[0], 0)
+	for i in range(1, 2):
+		H.expand(i)
+	return H
 
-	def draw_host(self, host):
-		cells = host.get_cells()
-		for cell in cells:
-			x,y = cell.coordinate
-			r = self.create_rectangle(y,x, y + cell.size, x + cell.size)
-			self.itemconfig(r, fill="green")
+def draw_host(host):
+	cells = host.get_cells()
+	map(draw_cell, cells)
 
-	def initial_config(self):
-		C = Cell(np.array([10, 10]), Position(0, 0), 1200)
-		H = Host(C, word[0], 0)
-		for i in range(1, 2):
-			H.expand(i)
-		return H
-
-
+def draw_cell(cell):
+	x,y= cell.coordinate
+	glRectf(cell.coordinate[y], cell.coordinate[x], y + cell.size, x + cell.size)
 
 def draw_stuff():
 	window = pyglet.window.Window()
-	window.set_size(1200, 1200)
+	window.set_size(600, 600)
 
-	nvb = Board()
-	nvb.grow()
+	top_host = initial_config()
+	#nvb = Board()
+	#nvb.grow()
 	# for c in self.top_host.get_cells():
 	#	print(c.coordinate)
 
-	self.draw_host(self.top_host)
+	#self.draw_host(self.top_host)
 	@window.event
 	def on_draw():
+		draw_host(top_host)
 		glClear(GL_COLOR_BUFFER_BIT)
 		glLoadIdentity()
 		glRectf(120, 0, 300, 200)
