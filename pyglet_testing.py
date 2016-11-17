@@ -87,7 +87,7 @@ class Host:
 		return self.size/self.length
 
 	def grow(self):
-		self.size += 48
+		self.size += ((self.size)/12)
 		self.recalculate_cells()
 
 	def expand(self, n):
@@ -106,69 +106,59 @@ class Host:
 	def __repr__(self):
 		return str(self.coordinate) + str(self.size)
 
-		#get next letter in word
-		# Canvas()
-		#
-		# coord_field = np.array([position_to_coordinate(self, np.array([u, v]), k) for u, v in np.ndindex(k, k)]).reshape(k, k, 2)
-		# self.canvas = [Cell(entry_at(coord_field, u, v), np.array([u, v]), self.size / k) for u, v in np.ndindex(k, k)
-		#                if self.binary_field[u, v]]
-		# pass
-
 
 def initial_config():
-	C = Cell(np.array([10, 10]), Position(50, 50), 600)
+	C = Cell(np.array([10, 10]), Position(0, 0), 1200)
 	H = Host(C, word[0], 0)
-	for i in range(1, 2):
-		H.expand(i)
+	H.expand(1)
+#	H.expand(2)
+	# for i in range(1, 2):
+	# 	H.expand(i)
 	return H
 
 def draw_host(host):
 	cells = host.get_cells()
-
-	map(draw_cell, cells)
+	for cell in cells:
+		draw_cell(cell)
+#	map(draw_cell, cells)
 
 def draw_cell(cell):
 	x, y = cell.coordinate
-	glRectf(cell.coordinate[y], cell.coordinate[x], y + cell.size, x + cell.size)
-
-def draw_stuff():
-	window = pyglet.window.Window()
-	window.set_size(600, 600)
-
-	label = pyglet.text.Label('Hello, world',
-	                          font_name='Times New Roman',
-	                          font_size=36,
-	                          x=window.width // 2, y=window.height // 2,
-	                          anchor_x='center', anchor_y='center')
-
-	top_host = initial_config()
-	#nvb = Board()
-	#nvb.grow()
-	# for c in self.top_host.get_cells():
-	#	print(c.coordinate)
-
-	#self.draw_host(self.top_host)
-	@window.event
-	def on_draw():
-		glClear(GL_COLOR_BUFFER_BIT)
-		glLoadIdentity()
-		window.clear()
-		time.sleep(1)
-		#glColor3f(float(1.0), float(0.0), float(0.0))
-		draw_host(top_host)
-		label.draw()
-
-		#glRectf(120, 0, 300, 200)
-
-	pyglet.app.EventLoop().run()
+	#print(x, y, cell.size)
+	glRectf(1200-y, 1200-x, 1200 - y + cell.size, 1200 - x + cell.size)
+	#glRectf(-10,-10,20,20)
 
 
-if __name__ == '__main__':
-	#root = tk.Tk()
-	#board = Board(root)
-	#root.mainloop()
+# label = pyglet.text.Label('Hello, world',
+#                           font_name='Times New Roman',
+#                           font_size=36,
+#                           x=window.width // 2, y=window.height // 2,
+#                           anchor_x='center', anchor_y='center')
 
-	# Direct OpenGL commands to this window.
-#	pyglet.on_resize(1200,1200)
-##
-	draw_stuff()
+top_host = initial_config()
+# @window.event
+# def on_draw():
+# 	glClear(GL_COLOR_BUFFER_BIT)
+# 	glLoadIdentity()
+# 	window.clear()
+# 	time.sleep(1)
+# 	#glColor3f(float(1.0), float(0.0), float(0.0))
+# 	draw_host(top_host)
+# 	label.draw()
+
+
+
+window = pyglet.window.Window()
+window.set_size(1200, 1200)
+
+@window.event
+def on_draw():
+	window.clear()
+	draw_host(top_host)
+	#glScalef(float(-1.0), float(1.0), float(-1.0))
+
+def update(dt):
+	top_host.grow()
+
+pyglet.clock.schedule_interval(update, 1/120.0)
+pyglet.app.run()
