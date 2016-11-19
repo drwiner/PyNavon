@@ -112,11 +112,21 @@ class Host:
 	def cellsize(self):
 		return self.size/math.pow(self.length, self.level)
 
+	@clock
+	def linspace(self):
+		return np.linspace(0, self.size, num=self.size / self.cellsize, dtype=np.dtype(np.float32))
+
+	@clock
+	def nparraythis(self, _axis):
+		return np.array([(i,j) for i in _axis for j in _axis])
+		#return [np.array([i, j]) for i in _axis for j in _axis]
+
+	@clock
 	def grow(self):
-		self.size += ((self.size)/12)
+		self.size += ((self.size)/4)
 		_axis = np.linspace(0, self.size, num=self.size / self.cellsize, dtype=np.dtype(np.float32))
 		# self.field = np.vstack(np.meshgrid(_axis, _axis, np.array([0,1])))
-		self.field = [np.array([i, j]) for i in _axis for j in _axis]
+		self.field = np.array([(i,j) for i in _axis for j in _axis])
 		#self.recalculate_cells()
 
 	def expand(self, n):
@@ -148,7 +158,7 @@ def initial_config():
 def draw_host(host):
 
 	for i,j in host.field:
-		glRectf(i,host.size-j,i + 2, host.size - j + 2)
+		glRectf(i+2,host.size-j+2,i + host.cellsize-2, host.size - j + host.cellsize-2)
 	# k = range(int(len(host.field)/3))
 	# #print(k)
 	# for i in k:
@@ -182,5 +192,5 @@ def update(dt):
 	top_host.grow()
 
 
-pyglet.clock.schedule_interval(update, 1/60.0)
+pyglet.clock.schedule_interval(update, 1/240.0)
 pyglet.app.run()
