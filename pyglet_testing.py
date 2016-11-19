@@ -3,6 +3,8 @@ from collections import namedtuple
 from clockdeco import clock
 from pyglet.gl import *
 import itertools
+import math
+
 
 
 Coordinate = namedtuple('Coordinate', ['x', 'y'])
@@ -41,6 +43,11 @@ def recalc_cell(host, cell):
 	size = host.size/host.length
 	return Cell(coord, cell.position, size)
 
+
+	#np.array([u for u, v in np.ndindex(k, k)]).reshape(k, k, 2)
+	#row = np.array([self.coordinate + self.cellsize * i for i in range(math.pow(k, levels))])
+
+
 class Cell:
 	def __init__(self, numpy_coord, numpy_position, size):
 		self.coordinate = numpy_coord
@@ -51,19 +58,29 @@ class Cell:
 		return [self]
 
 class Host:
-	def __init__(self, cell, pattern, i):
+	def __init__(self, cell, i, levels):
 		#cell attributes
 		self.coordinate = cell.coordinate
 		self.size = cell.size
 		self.position = cell.position
 		self.letter_position = i
+		self.level = levels
 
 		#internal cells and attributes
+		pattern  = word[self.letter_position]
 		k, positions = pattern
 		self.length = k
-		self.binary_field = pattern_to_binary(pattern)
-		coord_field = np.array([position_to_coordinate(self, np.array([u, v]), k) for u, v in np.ndindex(k,k)]).reshape(k,k,2)
-		self.canvas = [Cell(entry_at(coord_field, u, v), np.array([u, v]), self.size/k) for u, v in np.ndindex(k,k) if self.binary_field[u,v]]
+
+		_axis = np.linspace(0, self.size, num=self.size / self.cellsize, dtype=np.dtype(np.float32))
+		#self.field = np.vstack(np.meshgrid(_axis, _axis, np.array([0,1])))
+		self.field = [np.array([i,j]) for i in _axis for j in _axis]
+		pass
+
+		#np.array([position_to_coordinate(self, np.array([u, v]), k) for u, v in np.ndindex(k, k)]).reshape(k, k, 2)
+
+		#self.binary_field = pattern_to_binary(pattern)
+	#	coord_field = np.array([position_to_coordinate(self, np.array([u, v]), k) for u, v in np.ndindex(k,k)]).reshape(k,k,2)
+		#self.canvas = [Cell(entry_at(coord_field, u, v), np.array([u, v]), self.size/k) for u, v in np.ndindex(k,k) if self.binary_field[u,v]]
 
 	#@clock
 	def recalculate_cells(self):
@@ -90,6 +107,10 @@ class Host:
 	def subsize(self):
 		return self.size/self.length
 
+	@property
+	def cellsize(self):
+		return self.size/math.pow(self.length, self.level)
+
 	def grow(self):
 		self.size += ((self.size)/12)
 		self.recalculate_cells()
@@ -102,7 +123,7 @@ class Host:
 			if not isinstance(cell, Host):
 				#create new Host
 				j = (self.letter_position+1)%3
-				new_host = Host(cell, word[j], j)
+				new_host = Host(cell, j, n)
 				self.canvas[i] = new_host
 			else:
 				cell.expand(n-1)
@@ -113,18 +134,27 @@ class Host:
 
 def initial_config():
 	C = Cell(np.array([10, 10]), Position(0, 0), 1200)
-	H = Host(C, word[0], 0)
-	H.expand(1)
+	H = Host(C, 0, 2)
+	#H.expand(1)
 	#H.expand(2)
 	# for i in range(1, 2):
 	# 	H.expand(i)
 	return H
 
 def draw_host(host):
-	cells = host.get_cells()
+	for i,j in host.field:
+		glRectf(i,host.size-j,i + 2, host.size - j + 2)
+	# k = range(int(len(host.field)/3))
+	# #print(k)
+	# for i in k:
+	# 	for j in k:
+	# 		print(i,k)
+	# 		#print(host.field[i][j])
+	#
+#	cells = host.get_cells()
 	# map(draw_cell, cells)
-	for cell in cells:
-		draw_cell(cell)
+	#for cell in cells:
+	#	draw_cell(cell)
 
 def draw_cell(cell):
 	y, x = cell.coordinate
@@ -143,7 +173,8 @@ def on_draw():
 	draw_host(top_host)
 
 def update(dt):
-	top_host.grow()
+	pass
+	#top_host.grow()
 
 
 pyglet.clock.schedule_interval(update, 1/60.0)
