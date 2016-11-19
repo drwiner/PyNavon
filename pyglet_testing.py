@@ -74,6 +74,7 @@ class Host:
 		_axis = np.linspace(0, self.size, num=self.size / self.cellsize, dtype=np.dtype(np.float32))
 		#self.field = np.vstack(np.meshgrid(_axis, _axis, np.array([0,1])))
 		self.field = [np.array([i,j]) for i in _axis for j in _axis]
+		#self.field = np.meshgrid(_axis,np.array([0,1]), indexing='ij')
 		pass
 
 		#np.array([position_to_coordinate(self, np.array([u, v]), k) for u, v in np.ndindex(k, k)]).reshape(k, k, 2)
@@ -113,7 +114,10 @@ class Host:
 
 	def grow(self):
 		self.size += ((self.size)/12)
-		self.recalculate_cells()
+		_axis = np.linspace(0, self.size, num=self.size / self.cellsize, dtype=np.dtype(np.float32))
+		# self.field = np.vstack(np.meshgrid(_axis, _axis, np.array([0,1])))
+		self.field = [np.array([i, j]) for i in _axis for j in _axis]
+		#self.recalculate_cells()
 
 	def expand(self, n):
 		if n == 0:
@@ -142,6 +146,7 @@ def initial_config():
 	return H
 
 def draw_host(host):
+
 	for i,j in host.field:
 		glRectf(i,host.size-j,i + 2, host.size - j + 2)
 	# k = range(int(len(host.field)/3))
@@ -173,8 +178,8 @@ def on_draw():
 	draw_host(top_host)
 
 def update(dt):
-	pass
-	#top_host.grow()
+	#pass
+	top_host.grow()
 
 
 pyglet.clock.schedule_interval(update, 1/60.0)
