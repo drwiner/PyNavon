@@ -4,8 +4,7 @@ from clockdeco import clock
 from pyglet.gl import *
 import itertools
 import math
-
-
+from OpenGL.arrays import vbo
 
 Coordinate = namedtuple('Coordinate', ['x', 'y'])
 Position = namedtuple('Position', ['i','j'])
@@ -71,11 +70,22 @@ class Host:
 		k, positions = pattern
 		self.length = k
 
-		_axis = np.linspace(0, self.size, num=self.size / self.cellsize, dtype=np.dtype(np.float32))
+		_axis = np.linspace(0, self.size, num=self.size / self.cellsize, dtype=np.dtype(GLfloat))
 		#self.field = np.vstack(np.meshgrid(_axis, _axis, np.array([0,1])))
-		self.field = [np.array([i,j]) for i in _axis for j in _axis]
+		#self.field = [np.array([i,j]) for i in _axis for j in _axis]
+		self.field = np.array([np.array([i,j]) for i in _axis for j in _axis])
+		#self.verts = vbo.VBO(self.field)
+		#label = np.dstack(self.field)
+		#image = pyglet.image.Texture.create(1200,1200)
+		#self.texture = pyglet.image.ImageData.create_texture(self.field,pyglet.image.Texture)
+	#image = pyglet.image.ImageData(144,144,'RGB', )
+		#self.field.View()
+		#self.quad = gloo.Program(self.field)
+
+	#	self.vertices =
+		#pyglet.gl.glBindBuffer(pyglet.gl.GL_TEXTURE_2D, self.field)
 		#self.field = np.meshgrid(_axis,np.array([0,1]), indexing='ij')
-		pass
+	#	pass
 
 		#np.array([position_to_coordinate(self, np.array([u, v]), k) for u, v in np.ndindex(k, k)]).reshape(k, k, 2)
 
@@ -126,7 +136,8 @@ class Host:
 		self.size += ((self.size)/4)
 		_axis = np.linspace(0, self.size, num=self.size / self.cellsize, dtype=np.dtype(np.float32))
 		# self.field = np.vstack(np.meshgrid(_axis, _axis, np.array([0,1])))
-		self.field = np.array([(i,j) for i in _axis for j in _axis])
+		self.field = np.array([(i, j) for i in _axis for j in _axis])
+		#self.field = [i for i in _axis.extend(_axis)]
 		#self.recalculate_cells()
 
 	def expand(self, n):
@@ -155,10 +166,30 @@ def initial_config():
 	# 	H.expand(i)
 	return H
 
+@clock
 def draw_host(host):
+	#vertices = host.field.view(gloo.VertexBuffer)
+	# pyglet.image.Texture()
+	# pyglet.glTexCoordPointerd(host.field)
+	# pyglet.glEnable(GL_TEXTURE_COORD_ARRAY)
+	#
+	#img2 = pyglet.image.ImageData(1200, 1200, 'L', host.field.data, 1)
+#	img2.blit(0,0,z=0, width=1200, height=1200)
+	# img = pyglet.image.Texture.create(1200,1200)
+	# img2.blit_into(img, 0,0, 0)
+	# img2.blit(0,0)
+	#host.quad.draw(gl.GL_TRIANGLES)
+#	glBindTexture()
+	k = host.cellsize
+	s = host.size
 
-	for i,j in host.field:
-		glRectf(i+2,host.size-j+2,i + host.cellsize-2, host.size - j + host.cellsize-2)
+	#glVertexPointer(2, GL_FLOAT, 0, host.verts)
+	#pyglet.gl.glDrawArrays(GL_QUADS, 0, 2)
+	for x in host.field:
+		#glRectf(i+2, s-j+2, i+k-2, s-j_)
+		glRectf(x[0]+2, s-x[1]+2, x[0] + k-2, s-x[1]+k-2)
+	#for i,j in host.field:
+	#[glRectf(i+2,host.size-j+2,i + host.cellsize-2, host.size - j + host.cellsize-2) for i, j in host.field]
 	# k = range(int(len(host.field)/3))
 	# #print(k)
 	# for i in k:
@@ -177,10 +208,16 @@ def draw_cell(cell):
 	glRectf(x,1200-y, x + cell.size, 1200 - y + cell.size)
 
 
+
+#window = app.Window(width=1200, height=1200)
+
 top_host = initial_config()
+# H = gloo.Program(vertex, fragment)
+# H.bind(top_host.field)
 
 window = pyglet.window.Window()
 window.set_size(1200, 1200)
+
 
 @window.event
 def on_draw():
@@ -188,9 +225,9 @@ def on_draw():
 	draw_host(top_host)
 
 def update(dt):
-	#pass
-	top_host.grow()
+	pass
+	#top_host.grow()
 
 
-pyglet.clock.schedule_interval(update, 1/240.0)
+pyglet.clock.schedule_interval(update, 1/120.0)
 pyglet.app.run()
