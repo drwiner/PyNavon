@@ -31,20 +31,19 @@ class Host:
 		#cell attributes
 		self.coordinate = cell.coordinate
 		self.size = cell.size
-		self.position = cell.position
+		#self.position = cell.position
 		self.letter_position = letter_pos
 		self.level = levels
-		pattern  = word[self.letter_position]
+		pattern = word[self.letter_position]
 		self.length, self.positions = pattern
-		self.pointsize = 1.0
+		self.pointsize = 10.0
 
-		arr = self.size/self.cellsize
-		_axis = np.linspace(0, self.size, num=arr, dtype=np.dtype(gl.GLfloat))
-		field = np.array([np.array([i, j]) for i in _axis for j in _axis]).reshape(arr, arr, 2)
-		self.field = np.array([field[i, j] for i,j in self.positions])
+		_axis = np.linspace(0, self.size, num=self.arr, dtype=np.dtype(gl.GLfloat))
+		field = np.array([np.array([i, j]) for i in _axis for j in _axis]).reshape(self.arr, self.arr, 2)
+		mask = self.constructMask()
+		self.field = np.array([field[i, j] for (i, j) in mask])
 		pass
 
-		#self.field = self.field[i, j) in self.positions]
 
 	@property
 	def cellsize(self):
@@ -54,20 +53,36 @@ class Host:
 	def subsize(self):
 		return self.size / self.length
 
+	@property
+	def arr(self):
+		return int(self.size/self.cellsize)
+
 	@clock
 	def grow(self):
 		self.updatePointSize()
 		self.updateField()
 
-	def updatePointSize(self, n=.05):
-		self.pointsize += n
-		gl.glPointSize(self.pointsize)
+	def updatePointSize(self, n=.1):
+		self.pointsize -= n
+		if self.pointsize < .5:
+			self.pointsize = .5
 
 	def updateField(self):
-		arr = int(self.size / self.cellsize)
-		_axis = np.linspace(0, self.size, num=arr, dtype=np.dtype(gl.GLfloat))
-		field = np.array([np.array([i, j]) for i in _axis for j in _axis]).reshape(arr, arr, 2)
-		self.field = np.array([field in self.positions])
+		_axis = np.linspace(0, self.size, num=self.arr, dtype=np.dtype(gl.GLfloat))
+		field = np.array([np.array([i, j]) for i in _axis for j in _axis]).reshape(self.arr, self.arr, 2)
+		mask = self.constructMask()
+		self.field = np.array([field[i,j] for (i, j) in mask])
+		pass
+		#self.field = np.array([field[i, j] for (i, j) in mask])
+
+	def constructMask(self):
+		original = np.array(self.positions)
+		np.tile(original, (self.length,self.length))
+		ran = range(0,self.arr, self.length)
+		#tiles = np.array([np.array([i + inci + q, j + incj + z]) for i, j in original for inci in ran for incj in ran for
+		  #   q in range(12) for z in range(12)])
+		tiles = np.array([np.array([i+inci, j+incj]) for i, j in original for inci in ran for incj in ran])
+		return tiles
 
 	def expand(self):
 		pass
@@ -81,25 +96,30 @@ def initial_config():
 	H = Host(C, 0, 2)
 	return H
 
-@clock
-def drawArray(someArray):
-	vertPoints = someArray[:,:2].flatten().astype(ctypes.c_float)
-	gl.glVertexPointer(2, gl.GL_FLOAT, 0, vertPoints.ctypes.data)
-	gl.glDrawArrays(gl.GL_POINTS, 0, len(vertPoints) // 2)
+
+
 
 window = pyglet.window.Window(1200,1200)
 H = initial_config()
 
+@clock
+def drawArray(someArray):
+	vertPoints = someArray[:, :2].flatten().astype(ctypes.c_float)
+	gl.glVertexPointer(2, gl.GL_FLOAT, 0, vertPoints.ctypes.data)
+	gl.glDrawArrays(gl.GL_POINTS, 0, len(vertPoints) // 2)
+
 @window.event
 def on_draw():
-    gl.glPointSize(1.0)
+    gl.glPointSize(H.pointsize)
     gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
 
    # points = np.random.random((50,5))*np.array([400,400,1,1,1])
     drawArray(H.field)
 
 def update(dt):
+	window.clear()
 	H.grow()
+	gl.glPointSize(H.pointsize)
 	drawArray(H.field)
 
 
