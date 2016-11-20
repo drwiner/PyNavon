@@ -48,7 +48,7 @@ class Host:
 
 	@clock
 	def grow(self):
-		self.pointsize += .05
+		self.pointsize += .01
 
 	#	self.size += ((self.size) / 248)
 		#t = self.cellsize - .5*self.cellsize
