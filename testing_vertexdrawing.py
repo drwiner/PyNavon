@@ -45,6 +45,9 @@ class Host:
 	def cellsize(self):
 		return self.size / math.pow(self.length, self.level)
 
+	def cellsize_level(self, level):
+		return self.size / math.pow(self.length, level)
+
 	@property
 	def subsize(self):
 		return self.size / self.length
@@ -55,7 +58,7 @@ class Host:
 
 	@clock
 	def grow(self):
-		self.size += (self.size/25)
+		self.size += (self.size/36)
 		self.coordinate[0] -= 15
 		self.coordinate[1] -= 15
 		self.updatePointSize()
@@ -80,6 +83,7 @@ class Host:
 		scaled = original * self.length
 		lrange = [(i, j) for i in range(self.length) for j in range(self.length)]
 		ran = range(0, self.arr, self.length)
+		#int(self.size / self.cellsize)
 
 		#high_scale is the set of (u,v) tuples which correspond to subcell regions in pattern
 		high_scale = {(i+u,j+v) for (i, j) in scaled for (u, v) in lrange}
@@ -120,11 +124,10 @@ def drawArray(someArray):
 
 @window.event
 def on_draw():
-    gl.glPointSize(H.pointsize)
-    gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
-
-   # points = np.random.random((50,5))*np.array([400,400,1,1,1])
-    drawArray(H.field)
+	gl.glPointSize(H.pointsize)
+	gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
+	# points = np.random.random((50,5))*np.array([400,400,1,1,1])
+	drawArray(H.field)
 
 def update(dt):
 	window.clear()
