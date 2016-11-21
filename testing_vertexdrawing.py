@@ -72,7 +72,7 @@ class Host:
 		field = np.array([np.array([i, j]) for i in _axis for j in _axis]).reshape(self.arr, self.arr, 2)
 		mask = self.constructMask()
 		self.field = np.array([field[i,j] for (i, j) in mask])
-		pass
+		#pass
 		#self.field = np.array([field[i, j] for (i, j) in mask])
 
 	@clock
@@ -80,19 +80,21 @@ class Host:
 		original = np.array(self.positions)
 		scaled = original * 10
 		twelves = [(i,j) for i in range(12) for j in range(12)]
-		high_scale = np.array([np.array([i+u,j+v]) for (i, j) in scaled for (u,v) in twelves])
-		#high_scale = np.array([np.array([i+u, j+v]) for u in range(12) for v in range(12) for (i, j) in scaled])
+		high_scale = set((i+u,j+v) for (i, j) in scaled for (u,v) in twelves)
+		#high_scale = np.array([np.array([i+u, j+v ]) for u in range(12) for v in range(12) for (i, j) in scaled])
 		#np.tile(original, (self.length,self.length))
 		ran = range(0,self.arr, self.length)
 		#tiles = np.array([np.array([i + inci + q, j + incj + z]) for i, j in original for inci in ran for incj in ran for
 		  #   q in range(12) for z in range(12)])
-		tiles = np.array([np.array([i+inci, j+incj]) for i, j in original for inci in ran for incj in ran])
+		tiles = np.array([np.array([i+inci, j+incj]) for i, j in original for inci in ran for incj in ran
+		                  if (i+inci,j+incj) in high_scale])
 		#high_tiles = np.array(tile for tile in tiles if (tile[0], tile[1]) i
 
 		#total = np.array([x for x in high_scale if x in high_scale])
 		#for (i,j) in original*10:
 		#	[(i+u,j+v) for u in range(12) for v in range(12)]
-		return np.concatenate((high_scale, tiles), axis=0)
+		#return np.concatenate((high_scale, tiles), axis=0)
+		return tiles
 
 	def expand(self):
 		pass
