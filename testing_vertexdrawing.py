@@ -62,7 +62,7 @@ class Host:
 		self.updatePointSize()
 		self.updateField()
 
-	def updatePointSize(self, n=.1):
+	def updatePointSize(self, n=.2):
 		self.pointsize -= n
 		if self.pointsize < .5:
 			self.pointsize = .5
@@ -81,19 +81,9 @@ class Host:
 		scaled = original * 12
 		twelves = [(i,j) for i in range(12) for j in range(12)]
 		high_scale = set((i+u,j+v) for (i, j) in scaled for (u,v) in twelves)
-		#high_scale = np.array([np.array([i+u, j+v ]) for u in range(12) for v in range(12) for (i, j) in scaled])
-		#np.tile(original, (self.length,self.length))
 		ran = range(0,self.arr, self.length)
-		#tiles = np.array([np.array([i + inci + q, j + incj + z]) for i, j in original for inci in ran for incj in ran for
-		  #   q in range(12) for z in range(12)])
 		tiles = np.array([np.array([i+inci, j+incj]) for i, j in original for inci in ran for incj in ran
 		                  if (i+inci,j+incj) in high_scale])
-		#high_tiles = np.array(tile for tile in tiles if (tile[0], tile[1]) i
-
-		#total = np.array([x for x in high_scale if x in high_scale])
-		#for (i,j) in original*10:
-		#	[(i+u,j+v) for u in range(12) for v in range(12)]
-		#return np.concatenate((high_scale, tiles), axis=0)
 		return tiles
 
 	def expand(self):
