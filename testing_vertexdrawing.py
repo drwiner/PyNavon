@@ -38,11 +38,7 @@ class Host:
 		self.length, self.positions = pattern
 		self.pointsize = 10.0
 
-		_axis = np.linspace(0, self.size, num=self.arr, dtype=np.dtype(gl.GLfloat))
-		field = np.array([np.array([i, 1200-j]) for i in _axis for j in _axis]).reshape(self.arr, self.arr, 2)
-		mask = self.constructMask()
-		self.field = np.array([field[i, j] for (i, j) in mask])
-		pass
+		self.updateField()
 
 
 	@property
@@ -59,31 +55,40 @@ class Host:
 
 	@clock
 	def grow(self):
+		self.size += (self.size/25)
+		self.coordinate[0] -= 15
+		self.coordinate[1] -= 15
 		self.updatePointSize()
 		self.updateField()
 
-	def updatePointSize(self, n=.2):
+	def updatePointSize(self, n=.35):
 		self.pointsize -= n
 		if self.pointsize < .5:
 			self.pointsize = .5
 
 	def updateField(self):
-		_axis = np.linspace(0, self.size, num=self.arr, dtype=np.dtype(gl.GLfloat))
-		field = np.array([np.array([i, 1200-j]) for i in _axis for j in _axis]).reshape(self.arr, self.arr, 2)
+		_axis_a = np.linspace(self.coordinate[0], self.size, num=self.arr, dtype=np.dtype(gl.GLfloat))
+		_axis_b = np.linspace(self.coordinate[1], self.size, num=self.arr, dtype=np.dtype(gl.GLfloat))
+		field = np.array([np.array([i, 1200-j]) for i in _axis_a for j in _axis_b]).reshape(self.arr, self.arr, 2)
 		mask = self.constructMask()
 		self.field = np.array([field[i,j] for (i, j) in mask])
-		#pass
-		#self.field = np.array([field[i, j] for (i, j) in mask])
 
 	@clock
 	def constructMask(self):
 		original = np.array(self.positions)
-		scaled = original * 12
-		twelves = [(i,j) for i in range(12) for j in range(12)]
-		high_scale = set((i+u,j+v) for (i, j) in scaled for (u,v) in twelves)
-		ran = range(0,self.arr, self.length)
-		tiles = np.array([np.array([i+inci, j+incj]) for i, j in original for inci in ran for incj in ran
-		                  if (i+inci,j+incj) in high_scale])
+		scaled = original * self.length
+		lrange = [(i, j) for i in range(self.length) for j in range(self.length)]
+		ran = range(0, self.arr, self.length)
+
+		#high_scale is the set of (u,v) tuples which correspond to subcell regions in pattern
+		high_scale = {(i+u,j+v) for (i, j) in scaled for (u, v) in lrange}
+
+		#tiles are the lowest level units
+		tiles = np.array([np.array([i+inci, j+incj])
+		                  for i, j in original
+		                  for inci in ran
+		                  for incj in ran
+		                  if (i+inci, j+incj) in high_scale])
 		return tiles
 
 	def expand(self):
