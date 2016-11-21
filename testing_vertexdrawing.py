@@ -39,7 +39,7 @@ class Host:
 		self.pointsize = 10.0
 
 		_axis = np.linspace(0, self.size, num=self.arr, dtype=np.dtype(gl.GLfloat))
-		field = np.array([np.array([i, j]) for i in _axis for j in _axis]).reshape(self.arr, self.arr, 2)
+		field = np.array([np.array([i, 1200-j]) for i in _axis for j in _axis]).reshape(self.arr, self.arr, 2)
 		mask = self.constructMask()
 		self.field = np.array([field[i, j] for (i, j) in mask])
 		pass
@@ -69,7 +69,7 @@ class Host:
 
 	def updateField(self):
 		_axis = np.linspace(0, self.size, num=self.arr, dtype=np.dtype(gl.GLfloat))
-		field = np.array([np.array([i, j]) for i in _axis for j in _axis]).reshape(self.arr, self.arr, 2)
+		field = np.array([np.array([i, 1200-j]) for i in _axis for j in _axis]).reshape(self.arr, self.arr, 2)
 		mask = self.constructMask()
 		self.field = np.array([field[i,j] for (i, j) in mask])
 		#pass
@@ -78,7 +78,7 @@ class Host:
 	@clock
 	def constructMask(self):
 		original = np.array(self.positions)
-		scaled = original * 10
+		scaled = original * 12
 		twelves = [(i,j) for i in range(12) for j in range(12)]
 		high_scale = set((i+u,j+v) for (i, j) in scaled for (u,v) in twelves)
 		#high_scale = np.array([np.array([i+u, j+v ]) for u in range(12) for v in range(12) for (i, j) in scaled])
@@ -104,10 +104,9 @@ class Host:
 
 
 def initial_config():
-	C = Cell(np.array([10, 10]), np.array([0,0]), 1200)
+	C = Cell(np.array([0, 0]), np.array([0,0]), 1200)
 	H = Host(C, 0, 2)
 	return H
-
 
 
 
