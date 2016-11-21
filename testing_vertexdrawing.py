@@ -64,7 +64,8 @@ class Host:
 	def updatePointSize(self, n=.35):
 		self.pointsize -= n
 		if self.pointsize < .5:
-			self.pointsize = .5
+			self.pointsize = 10.0
+			#self.pointsize = .5
 
 	def updateField(self):
 		_axis_a = np.linspace(self.coordinate[0], self.size, num=self.arr, dtype=np.dtype(gl.GLfloat))
@@ -82,6 +83,9 @@ class Host:
 
 		#high_scale is the set of (u,v) tuples which correspond to subcell regions in pattern
 		high_scale = {(i+u,j+v) for (i, j) in scaled for (u, v) in lrange}
+
+		#let scaled_i refer to the original*i scaled array
+		#let lrange length needs to correspond to mid-component subcell
 
 		#tiles are the lowest level units
 		tiles = np.array([np.array([i+inci, j+incj])
