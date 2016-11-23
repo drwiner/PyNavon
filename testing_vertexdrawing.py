@@ -2,8 +2,10 @@ import numpy as np; import ctypes
 import pyglet; import pyglet.gl as gl
 from clockdeco import clock
 from collections import namedtuple
+from functools import partial
 import time
 import math
+
 
 Pattern = namedtuple('Pattern', ['length', 'positions'])
 
@@ -38,7 +40,7 @@ class Host:
 		pattern = word[self.letter_position]
 		self.length, self.positions = pattern
 		self.pointsize = 0.3
-
+		self.indices = self.recursive_strategy()
 		self.updateField()
 
 
@@ -76,73 +78,52 @@ class Host:
 			#self.pointsize = .5
 
 
-	def make_cells(self, t, length, patt):
-		size_2 = int(self.size / math.pow(length, 2))
+	def make_cells(self, t, length, patt, ):
+		size_2 = int(1728 / math.pow(length, 2))
 		p = t + np.array(patt) * (size_2 / length)
-		return [np.array([tx, 1200 - ty]) for tx, ty in p]
+		return p
+		#return [(tx,ty) for tx]
+		#return [(tx, 1200 - ty]) for tx, ty in p]
 
 
 	def make_top_lefts(self, t, i, length, patt):
 		if i >= self.levels:
 			return self.make_cells(t, length, patt)
 
-		size = int(self.size / math.pow(length, i))
+		size = int(1728 / math.pow(length, i))
 		p_1 = t + np.array(patt) * (size / length)
-
 		ll, pp = word[i+1]
 		cells = []
+		mtl = partial(self.make_top_lefts, i=i+1, length=ll, patt=pp)
 		for tt in p_1:
-			cells.extend(self.make_top_lefts(tt, i+1, ll, pp))
+			cells.extend(mtl(tt))
 		return cells
 
 	@clock
 	def recursive_strategy(self):
 		length_0, patt_0 = word[0]
-		cells = self.make_top_lefts(self.coordinate, 0, length_0, patt_0)
-		return cells
+		return self.make_top_lefts(self.coordinate, 0, length_0, patt_0)
 
-	def cart_rng(self, length, k):
-		rng = range(0, self.size, int(self.size / math.pow(length, k)))
-		return np.array([(i, j) for i in rng for j in rng])
-
-	def top_lefts(self, pattern, rng):
-		#given a pattern and a rng,
-		# where the rng should be scoped to a particular sub region,
-		# generate an array of top-lefts
-		return np.array([np.array([i + inci, j + incj]) for i, j in pattern for inci, incj in rng])
+	@clock
+	def f(self, field):
+		return np.array([field[int(j)][int(i)] for (i, j) in self.indices])
 
 	@clock
 	def updateField(self):
-		#_axis_a = np.linspace(self.coordinate[0], self.coordinate[0]+self.size, num=self.size, dtype=np.dtype(gl.GLfloat))
-		#_axis_b = np.linspace(self.coordinate[1], self.coordinate[1]+self.size, num=self.size, dtype=np.dtype(gl.GLfloat))
-		#field = np.array([np.array([i, 1200-j]) for i in _axis_a for j in _axis_b]).reshape(self.size, self.size, 2)
+		_axis_a = np.linspace(self.coordinate[0], self.coordinate[0]+self.size, num=1728, dtype=np.dtype(gl.GLfloat))
+		_axis_b = 1200 - np.linspace(self.coordinate[1], self.coordinate[1]+self.size, num=1728, dtype=np.dtype(gl.GLfloat))
+		# field = np.array([np.array([i, 1200-j]) for i in _axis_a for j in _axis_b]).reshape(self.size, self.size, 2)
+		field = [[(i, j) for i in _axis_a] for j in _axis_b]
+		self.field = self.f(field)
 
 		#mask = self.constructMask()
-		self.field = np.array(self.recursive_strategy())
+		#self.field = np.array(self.recursive_strategy())
 		#np array method
 		#self.field = np.array([field[cell[0], cell[1]] for cell in cells])
 		#tuple method
 		#self.field = np.array([np.array([self.coordinate[0] + i, 1200-self.coordinate[1] - j]) for (i, j) in cells])
 		#pass
 		#self.field = np.array([field[i, j] for (i, j) in cells])
-
-	@clock
-	def constructMask(self):
-		original = np.array(self.positions)
-		ran = range(0, self.arr, self.length)
-	#	smallest = range(0, self.arr, )
-		#arr = int(self.size / self.cellsize)
-
-		#high_scale is the set of (u,v) tuples which correspond to mid-subcell regions in pattern
-		high_scale = self.mask_it(original, int(math.pow(self.length, 2)))
-
-		#tiles are the lowest level units?
-		tiles = np.array([np.array([i+inci, j+incj])
-		                  for i, j in original
-		                  for inci in ran
-		                  for incj in ran
-		                  if (i+inci, j+incj) in high_scale])
-		return tiles
 
 	def expand(self):
 		pass #self.length = self.length*self.length
