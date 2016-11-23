@@ -18,9 +18,9 @@ pat_test = Pattern(2, positions=np.array([(0,0), (1,1)]))
 word = [pat_T, pat_C, pat_A, pat_test]
 
 class Cell:
-	def __init__(self, numpy_coord, numpy_position, size):
+	def __init__(self, numpy_coord, size):
 		self.coordinate = numpy_coord
-		self.position = numpy_position
+		#self.position = numpy_position
 		self.size = size
 
 	def get_cells(self):
@@ -29,23 +29,24 @@ class Cell:
 class Host:
 	def __init__(self, cell, letter_pos, levels):
 		#cell attributes
+
 		self.coordinate = cell.coordinate
 		self.size = cell.size
 		#self.position = cell.position
 		self.letter_position = letter_pos
-		self.level = levels
+		self.levels = levels
 		pattern = word[self.letter_position]
 		self.length, self.positions = pattern
-		self.pointsize = 10.0
+		self.pointsize = 1.0
 
 		self.updateField()
 
 
 	@property
 	def cellsize(self):
-		return self.size / math.pow(self.length, self.level)
+		return self.size / math.pow(self.length, self.levels)
 
-	def cellsize_level(self, level):
+	def size_lvl(self, level):
 		return self.size / math.pow(self.length, level)
 
 	@property
@@ -56,12 +57,13 @@ class Host:
 	def arr(self):
 		return int(self.size/self.cellsize)
 
-	@clock
+	#@clock
 	def grow(self):
-		self.size += (self.size/36)
-		self.coordinate[0] -= 15
-		self.coordinate[1] -= 15
-		self.updatePointSize()
+		#pass
+		# self.size += (self.size/36)
+		# self.coordinate[0] -= 15
+		# self.coordinate[1] -= 15
+		# self.updatePointSize()
 		self.updateField()
 
 	def updatePointSize(self, n=.35):
@@ -70,28 +72,55 @@ class Host:
 			self.pointsize = 10.0
 			#self.pointsize = .5
 
+	def recursive_strategy(self):
+		#idea is: recursively generate top-lefts, iteratate over them and generate top-lefts etc
+		length_1, patt_1 = word[0]
+		c1 = self.cart_rng(length_1, 1)
+		length_2, patt_2 = word[1]
+		c2 = self.cart_rng(length_2, 2)
+		length_3, patt_3 = word[2]
+		c3 = self.cart_rng(length_3, 3)
+
+		self.ev(patt_1, c1)
+
+		return  self.ev(patt_3, self.config(length_3, 3),
+		            self.ev(patt_2, self.config(length_2, 2),
+		                self.ev(patt_1, self.config(length_1, 1))))
+		#self.field = np.array([field[i, j] for (i, j) in mask])
+
+	def cart_rng(self, length, k):
+		rng = range(0, self.size, int(self.size / math.pow(length, k)))
+		return np.array([(i, j) for i in rng for j in rng])
+
+	def top_lefts(self, pattern, rng):
+		#given a pattern and a rng,
+		# where the rng should be scoped to a particular sub region,
+		# generate an array of top-lefts
+		return np.array([np.array([i + inci, j + incj]) for i, j in pattern for inci, incj in rng])
+
+	@clock
 	def updateField(self):
 		_axis_a = np.linspace(self.coordinate[0], self.size, num=self.arr, dtype=np.dtype(gl.GLfloat))
 		_axis_b = np.linspace(self.coordinate[1], self.size, num=self.arr, dtype=np.dtype(gl.GLfloat))
 		field = np.array([np.array([i, 1200-j]) for i in _axis_a for j in _axis_b]).reshape(self.arr, self.arr, 2)
-		mask = self.constructMask()
-		self.field = np.array([field[i,j] for (i, j) in mask])
+		#mask = self.constructMask()
+		cells = self.recursive_strategy()
+		#np array method
+		self.field = np.array([field[cell[0], cell[1]] for cell in cells])
+		#tuple method
+		#self.field = np.array([field[i, j] for (i, j) in cells])
 
 	@clock
 	def constructMask(self):
 		original = np.array(self.positions)
-		scaled = original * self.length
-		lrange = [(i, j) for i in range(self.length) for j in range(self.length)]
 		ran = range(0, self.arr, self.length)
-		#int(self.size / self.cellsize)
+	#	smallest = range(0, self.arr, )
+		#arr = int(self.size / self.cellsize)
 
-		#high_scale is the set of (u,v) tuples which correspond to subcell regions in pattern
-		high_scale = {(i+u,j+v) for (i, j) in scaled for (u, v) in lrange}
+		#high_scale is the set of (u,v) tuples which correspond to mid-subcell regions in pattern
+		high_scale = self.mask_it(original, int(math.pow(self.length, 2)))
 
-		#let scaled_i refer to the original*i scaled array
-		#let lrange length needs to correspond to mid-component subcell
-
-		#tiles are the lowest level units
+		#tiles are the lowest level units?
 		tiles = np.array([np.array([i+inci, j+incj])
 		                  for i, j in original
 		                  for inci in ran
@@ -100,15 +129,28 @@ class Host:
 		return tiles
 
 	def expand(self):
-		pass
+		pass #self.length = self.length*self.length
 
 	def contract(self):
 		pass
 
+	@clock
+	def tile_it(self, original, length, restricted):
+		scaled = original * length
+		lrange = [(i, j) for i in range(length) for j in range(length)]
+		np.array([np.array([i + inci, j + incj]) for i, j in original for (inci, incj) in lrange
+		          if (i + inci, j + incj) in restricted])
+
+	@clock
+	def mask_it(self, original, length):
+		#ran = range(0, self.arr, length)
+		scaled = original * length
+		lrange = [(i, j) for i in range(length) for j in range(length)]
+		return {(i + u, j + v) for (i, j) in scaled for (u, v) in lrange}
 
 def initial_config():
-	C = Cell(np.array([0, 0]), np.array([0,0]), 1200)
-	H = Host(C, 0, 2)
+	C = Cell(np.array([0, 0]), 1200)
+	H = Host(C, 0, 3)
 	return H
 
 
