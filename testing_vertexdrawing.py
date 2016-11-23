@@ -59,7 +59,10 @@ class Host:
 
 	#@clock
 	def grow(self):
-		pass
+		self.coordinate[0] -= 15
+		if self.coordinate[0] < -1200:
+			self.coordinate[0] = 1200
+		self.updateField()
 		# self.size += (self.size/36)
 		# self.coordinate[0] -= 15
 		# self.coordinate[1] -= 15
@@ -72,50 +75,30 @@ class Host:
 			self.pointsize = 10.0
 			#self.pointsize = .5
 
+
+	def make_cells(self, t, length, patt):
+		size_2 = int(self.size / math.pow(length, 2))
+		p = t + np.array(patt) * (size_2 / length)
+		return [np.array([tx, 1200 - ty]) for tx, ty in p]
+
+
+	def make_top_lefts(self, t, i, length, patt):
+		if i >= self.levels:
+			return self.make_cells(t, length, patt)
+
+		size = int(self.size / math.pow(length, i))
+		p_1 = t + np.array(patt) * (size / length)
+
+		ll, pp = word[i+1]
+		cells = []
+		for tt in p_1:
+			cells.extend(self.make_top_lefts(tt, i+1, ll, pp))
+		return cells
+
 	@clock
 	def recursive_strategy(self):
-		cells = [np.array(self.coordinate)]
-		x = 0
-		y = 0
-
 		length_0, patt_0 = word[0]
-		size = self.size
-		rng_0 = range(0, size, 100)
-		rng_0 = range(0, 12)
-		inc_rng_0 = [(i,j) for i in rng_0 for j in rng_0]
-		top_lefts = np.array(patt_0)*(size/length_0)
-		#cells.update({(x + i + inci, y + j + incj) for i, j in patt_0 for inci, incj in inc_rng_0})
-		#top_lefts = np.array([(i + inci, j + incj) for i, j in patt_0 for inci, incj in inc_rng_0])
-		for tl in top_lefts:
-			length_1, patt_1 = word[1]
-			size_1 = int(self.size / math.pow(length_1, 1))
-			rng_1 = range(0, size_1, int(size_1 / length_1))
-			rng_1 = range(0, 12)
-			p_1 = tl + np.array(patt_1)*(size_1/length_1)
-			inc_rng_1 = [(i, j) for i in rng_1 for j in rng_1]
-
-			#top_lefts_1 = [(x + i + inci, y + j + incj) for i, j in p_1 for inci, incj in inc_rng_1]
-
-			for t in p_1:
-				length_2, patt_2 = word[2]
-				size_2 = int(self.size / math.pow(length_1, 2))
-				p_2 = t + np.array(patt_2)*(size_2/length_2)
-				new_cells = [np.array([tx, 1200 - ty]) for tx, ty in p_2]
-				#new_cells = np.array([np.array([tx + i + inci, 1200 - ty - j - incj], dtype=np.dtype(gl.GLfloat))
-				                 #     for i, j in p_2 for inci, incj in inc_rng_1])
-				cells.extend(new_cells)
-		#length_2, patt_2 = word[2]
-		#size_2 = int(self.size / math.pow(length_2, 2))
-		#rng_2 = range(0, size_2, int(size_2 / length_2))
-
-
-
-
-		#top_1 = np.array([(x+i+inci, y+j+incj) for i, j in patt_1 for inci, incj in rng_1])
-		#cells.update({(x + i + inci, y + j + incj) for i, j in patt_1 for inci, incj in inc_rng_1})
-			#for tx, ty in top_1:
-			#	cells.update({(tx+i+inci, ty+j+incj) for i, j in patt_2 for inci, incj in rng_2})
-
+		cells = self.make_top_lefts(self.coordinate, 0, length_0, patt_0)
 		return cells
 
 	def cart_rng(self, length, k):
