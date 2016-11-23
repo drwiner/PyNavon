@@ -37,7 +37,7 @@ class Host:
 		self.levels = levels
 		pattern = word[self.letter_position]
 		self.length, self.positions = pattern
-		self.pointsize = 1.0
+		self.pointsize = 0.3
 
 		self.updateField()
 
@@ -59,12 +59,12 @@ class Host:
 
 	#@clock
 	def grow(self):
-		#pass
+		pass
 		# self.size += (self.size/36)
 		# self.coordinate[0] -= 15
 		# self.coordinate[1] -= 15
 		# self.updatePointSize()
-		self.updateField()
+		#self.updateField()
 
 	def updatePointSize(self, n=.35):
 		self.pointsize -= n
@@ -72,21 +72,51 @@ class Host:
 			self.pointsize = 10.0
 			#self.pointsize = .5
 
+	@clock
 	def recursive_strategy(self):
-		#idea is: recursively generate top-lefts, iteratate over them and generate top-lefts etc
-		length_1, patt_1 = word[0]
-		c1 = self.cart_rng(length_1, 1)
-		length_2, patt_2 = word[1]
-		c2 = self.cart_rng(length_2, 2)
-		length_3, patt_3 = word[2]
-		c3 = self.cart_rng(length_3, 3)
+		cells = [np.array(self.coordinate)]
+		x = 0
+		y = 0
 
-		self.ev(patt_1, c1)
+		length_0, patt_0 = word[0]
+		size = self.size
+		rng_0 = range(0, size, 100)
+		rng_0 = range(0, 12)
+		inc_rng_0 = [(i,j) for i in rng_0 for j in rng_0]
+		top_lefts = np.array(patt_0)*(size/length_0)
+		#cells.update({(x + i + inci, y + j + incj) for i, j in patt_0 for inci, incj in inc_rng_0})
+		#top_lefts = np.array([(i + inci, j + incj) for i, j in patt_0 for inci, incj in inc_rng_0])
+		for tl in top_lefts:
+			length_1, patt_1 = word[1]
+			size_1 = int(self.size / math.pow(length_1, 1))
+			rng_1 = range(0, size_1, int(size_1 / length_1))
+			rng_1 = range(0, 12)
+			p_1 = tl + np.array(patt_1)*(size_1/length_1)
+			inc_rng_1 = [(i, j) for i in rng_1 for j in rng_1]
 
-		return  self.ev(patt_3, self.config(length_3, 3),
-		            self.ev(patt_2, self.config(length_2, 2),
-		                self.ev(patt_1, self.config(length_1, 1))))
-		#self.field = np.array([field[i, j] for (i, j) in mask])
+			#top_lefts_1 = [(x + i + inci, y + j + incj) for i, j in p_1 for inci, incj in inc_rng_1]
+
+			for t in p_1:
+				length_2, patt_2 = word[2]
+				size_2 = int(self.size / math.pow(length_1, 2))
+				p_2 = t + np.array(patt_2)*(size_2/length_2)
+				new_cells = [np.array([tx, 1200 - ty]) for tx, ty in p_2]
+				#new_cells = np.array([np.array([tx + i + inci, 1200 - ty - j - incj], dtype=np.dtype(gl.GLfloat))
+				                 #     for i, j in p_2 for inci, incj in inc_rng_1])
+				cells.extend(new_cells)
+		#length_2, patt_2 = word[2]
+		#size_2 = int(self.size / math.pow(length_2, 2))
+		#rng_2 = range(0, size_2, int(size_2 / length_2))
+
+
+
+
+		#top_1 = np.array([(x+i+inci, y+j+incj) for i, j in patt_1 for inci, incj in rng_1])
+		#cells.update({(x + i + inci, y + j + incj) for i, j in patt_1 for inci, incj in inc_rng_1})
+			#for tx, ty in top_1:
+			#	cells.update({(tx+i+inci, ty+j+incj) for i, j in patt_2 for inci, incj in rng_2})
+
+		return cells
 
 	def cart_rng(self, length, k):
 		rng = range(0, self.size, int(self.size / math.pow(length, k)))
@@ -100,14 +130,17 @@ class Host:
 
 	@clock
 	def updateField(self):
-		_axis_a = np.linspace(self.coordinate[0], self.size, num=self.arr, dtype=np.dtype(gl.GLfloat))
-		_axis_b = np.linspace(self.coordinate[1], self.size, num=self.arr, dtype=np.dtype(gl.GLfloat))
-		field = np.array([np.array([i, 1200-j]) for i in _axis_a for j in _axis_b]).reshape(self.arr, self.arr, 2)
+		#_axis_a = np.linspace(self.coordinate[0], self.coordinate[0]+self.size, num=self.size, dtype=np.dtype(gl.GLfloat))
+		#_axis_b = np.linspace(self.coordinate[1], self.coordinate[1]+self.size, num=self.size, dtype=np.dtype(gl.GLfloat))
+		#field = np.array([np.array([i, 1200-j]) for i in _axis_a for j in _axis_b]).reshape(self.size, self.size, 2)
+
 		#mask = self.constructMask()
-		cells = self.recursive_strategy()
+		self.field = np.array(self.recursive_strategy())
 		#np array method
-		self.field = np.array([field[cell[0], cell[1]] for cell in cells])
+		#self.field = np.array([field[cell[0], cell[1]] for cell in cells])
 		#tuple method
+		#self.field = np.array([np.array([self.coordinate[0] + i, 1200-self.coordinate[1] - j]) for (i, j) in cells])
+		#pass
 		#self.field = np.array([field[i, j] for (i, j) in cells])
 
 	@clock
@@ -150,7 +183,7 @@ class Host:
 
 def initial_config():
 	C = Cell(np.array([0, 0]), 1200)
-	H = Host(C, 0, 3)
+	H = Host(C, 0, 2)
 	return H
 
 
@@ -158,7 +191,7 @@ def initial_config():
 window = pyglet.window.Window(1200,1200)
 H = initial_config()
 
-@clock
+# @clock
 def drawArray(someArray):
 	vertPoints = someArray[:, :2].flatten().astype(ctypes.c_float)
 	gl.glVertexPointer(2, gl.GL_FLOAT, 0, vertPoints.ctypes.data)
