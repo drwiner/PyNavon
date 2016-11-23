@@ -61,7 +61,7 @@ class Host:
 
 	#@clock
 	def grow(self):
-		self.coordinate[0] -= 15
+		self.coordinate[0] -= 5
 		if self.coordinate[0] < -1200:
 			self.coordinate[0] = 1200
 		self.updateField()
@@ -79,9 +79,9 @@ class Host:
 
 
 	def make_cells(self, t, length, patt, ):
-		size_2 = int(1728 / math.pow(length, 2))
+		size_2 = int(self.size / math.pow(length, 2))
 		p = t + np.array(patt) * (size_2 / length)
-		return p
+		return [(i, 1200-j) for i,j in p]
 		#return [(tx,ty) for tx]
 		#return [(tx, 1200 - ty]) for tx, ty in p]
 
@@ -90,7 +90,7 @@ class Host:
 		if i >= self.levels:
 			return self.make_cells(t, length, patt)
 
-		size = int(1728 / math.pow(length, i))
+		size = int(self.size / math.pow(length, i))
 		p_1 = t + np.array(patt) * (size / length)
 		ll, pp = word[i+1]
 		cells = []
@@ -106,24 +106,17 @@ class Host:
 
 	@clock
 	def f(self, field):
-		return np.array([field[int(j)][int(i)] for (i, j) in self.indices])
+		return [field[j][i] for i, j in self.indices]
 
 	@clock
 	def updateField(self):
+		self.field = np.array(self.recursive_strategy())
+
+	def old_update_field(self):
 		_axis_a = np.linspace(self.coordinate[0], self.coordinate[0]+self.size, num=1728, dtype=np.dtype(gl.GLfloat))
 		_axis_b = 1200 - np.linspace(self.coordinate[1], self.coordinate[1]+self.size, num=1728, dtype=np.dtype(gl.GLfloat))
-		# field = np.array([np.array([i, 1200-j]) for i in _axis_a for j in _axis_b]).reshape(self.size, self.size, 2)
 		field = [[(i, j) for i in _axis_a] for j in _axis_b]
-		self.field = self.f(field)
-
-		#mask = self.constructMask()
-		#self.field = np.array(self.recursive_strategy())
-		#np array method
-		#self.field = np.array([field[cell[0], cell[1]] for cell in cells])
-		#tuple method
-		#self.field = np.array([np.array([self.coordinate[0] + i, 1200-self.coordinate[1] - j]) for (i, j) in cells])
-		#pass
-		#self.field = np.array([field[i, j] for (i, j) in cells])
+		self.field = np.array(self.f(field))
 
 	def expand(self):
 		pass #self.length = self.length*self.length
@@ -131,33 +124,22 @@ class Host:
 	def contract(self):
 		pass
 
-	@clock
-	def tile_it(self, original, length, restricted):
-		scaled = original * length
-		lrange = [(i, j) for i in range(length) for j in range(length)]
-		np.array([np.array([i + inci, j + incj]) for i, j in original for (inci, incj) in lrange
-		          if (i + inci, j + incj) in restricted])
-
-	@clock
-	def mask_it(self, original, length):
-		#ran = range(0, self.arr, length)
-		scaled = original * length
-		lrange = [(i, j) for i in range(length) for j in range(length)]
-		return {(i + u, j + v) for (i, j) in scaled for (u, v) in lrange}
-
 def initial_config():
 	C = Cell(np.array([0, 0]), 1200)
 	H = Host(C, 0, 2)
 	return H
 
 
-
 window = pyglet.window.Window(1200,1200)
 H = initial_config()
 
-# @clock
+@clock
 def drawArray(someArray):
-	vertPoints = someArray[:, :2].flatten().astype(ctypes.c_float)
+	# x = (ctypes.c_float * len(someArray))(*someArray[:][0])
+	# y = (ctypes.c_float * len(someArray))(*someArray[:][1])
+	# vertPoints = list(zip(x,y))
+	#someArray = np.array(someArray)
+	vertPoints = someArray[:,:2].flatten().astype(ctypes.c_float)
 	gl.glVertexPointer(2, gl.GL_FLOAT, 0, vertPoints.ctypes.data)
 	gl.glDrawArrays(gl.GL_POINTS, 0, len(vertPoints) // 2)
 
