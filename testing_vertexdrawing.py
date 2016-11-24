@@ -92,7 +92,9 @@ class Host:
 
 		size = int(self.size / math.pow(length, i))
 		p_1 = t + np.array(patt) * (size / length)
-		ll, pp = word[i+1]
+
+		ll, pp = word[(i % len(word)) + 1]
+
 		cells = []
 		mtl = partial(self.make_top_lefts, i=i+1, length=ll, patt=pp)
 		for tt in p_1:
