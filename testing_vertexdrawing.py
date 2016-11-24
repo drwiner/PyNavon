@@ -61,7 +61,8 @@ class Host:
 		#self.coordinate[0] -= 25
 
 		self.size += (self.size / 24)
-
+		if self.size > 8000:
+			self.expand()
 	#	if self.pointsize > 4.0:
 	#		self.pointsize -= 3.0
 		self.coordinate = self.coordinate + (self.center - self.get_center())
@@ -74,8 +75,7 @@ class Host:
 		#self.pointsize += .03
 		# print('pointsize', self.pointsize)
 		# print('size', self.size)
-	#	if self.size > 8000:
-	#		self.expand()
+
 		self.center = self.get_center()
 
 	def make_cells(self, t, i, length, patt):
@@ -156,10 +156,14 @@ class Host:
 		self.top_level += 1
 		if self.top_level >= len(word):
 			self.top_level = 0
-		top_lefts = self.top_range()
+		#top_lefts = self.top_range()
+		self.size = self.size / 12
+		#pass the torch
+		self.coordinate = self.center
+		self.center = self.get_center()
 
 		#self.coordinate = find_nearest(top_lefts, np.zeros_like(top_lefts))
-		self.size = self.size/12
+
 
 def initial_config():
 	C = Cell(np.array([0, 0]), 1200)
