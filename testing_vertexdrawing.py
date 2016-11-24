@@ -106,7 +106,7 @@ class Host:
 		size = int(self.size / math.pow(length, i))
 		p_1 = t + patt * (size / length)
 		#print(((i+1) % len(word)))
-		ll, pp = word[((i+1) % len(word))]
+		ll, pp = word[((self.top_level + i+1) % len(word))]
 
 		cells = []
 		mtl = partial(self.make_top_lefts, i=i+1, length=ll, patt=pp)
@@ -138,10 +138,12 @@ class Host:
 		#we'll need to know which cell is/ to make the new head.
 		#Take the range of the top level again
 		self.top_level += 1
+		if self.top_level >= len(word):
+			self.top_level = 0
 		top_lefts = self.top_range()
 
 		#get the distnace of each top_level from 0,0
-		self.coordinate = find_nearest(top_lefts, np.zeros_like(top_lefts))
+		#self.coordinate = find_nearest(top_lefts, np.zeros_like(top_lefts))
 		self.size = self.size/12
 		#now the coordinate of interest in this one which is closest.
 
