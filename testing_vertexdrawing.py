@@ -53,29 +53,30 @@ class Host:
 		self.levels = levels
 		self.top_level = 0
 		self.pointsize = 1.0
+		self.center = self.get_center()
 		self.updateField()
 
 	#@clock
 	def grow(self):
 		#self.coordinate[0] -= 25
-		b4 = self.coordinate
-		self.size += (self.size / 16)
 
-		if self.pointsize > 5.0:
-			self.pointsize -= 3.0
+		self.size += (self.size / 24)
 
+	#	if self.pointsize > 4.0:
+	#		self.pointsize -= 3.0
+		self.coordinate = self.coordinate + (self.center - self.get_center())
 		self.updateField()
 
-		#cb = self.coordinate - b4
-		#self.coordinate += cb
-		L, P, C = self.getWord(self.top_level + 1)
-		self.dialate(C, self.size, L)
 
-		self.pointsize += .13
+
+		#self.dialate(C, self.size, L)
+
+		#self.pointsize += .03
 		# print('pointsize', self.pointsize)
 		# print('size', self.size)
-		if self.size > 8000:
-			self.expand()
+	#	if self.size > 8000:
+	#		self.expand()
+		self.center = self.get_center()
 
 	def make_cells(self, t, i, length, patt):
 		size = int(self.size / math.pow(length, i))
@@ -87,31 +88,41 @@ class Host:
 		#return [(tx, 1200 - ty]) for tx, ty in p]
 
 	def top_range(self):
-		if self.top_level == 0:
-			length, patt, _ = word[-1]
-		else:
-			length, patt, _ = word[self.top_level-1]
+		length, patt, _ = self.getWord(self.top_level+1) #assumes top_level already adjusted
 		size = int(self.size / math.pow(length, 1))
 		return self.coordinate + patt * (size / length)
+
+	@clock
+	def get_center(self):
+		#set the center at level 1 to be the scaled version
+		#self.coordinate will be 0,0
+		L, _, C = self.getWord(self.top_level)
+		size = self.size / L
+		return self.coordinate + np.array(C) * size + [size/2, size/2]
+		#return self.scaled_top_lefts(self.coordinate, 1, L, np.array(C))
+
 
 	def dialate(self, ctr, size, length):
 		#np.array(ctr)*(self.size / 16)
 
-		c = self.coordinate + np.array(ctr)*(size/length)
+		c = self.coordinate + np.array(ctr)
 		c = c/16
 		c = self.coordinate - c
-		self.coordinate = c
+		self.coordinate = self.coordinate + c
 
 	def getWord(self, i):
 		return word[((self.top_level + i) % len(word))]
+
+	def scaled_top_lefts(self, start_at, level, length, patt):
+		size = int(self.size / math.pow(length, level))
+		return start_at + patt * (size/length)
 
 	def make_top_lefts(self, t, i, length, patt):
 		if i >= self.levels:
 			return self.make_cells(t, i, length, patt)
 
-		size = int(self.size / math.pow(length, i))
-		p_1 = t + patt * (size / length)
-		ll, pp, _ = self.getWord(i+1)
+		p_1 = self.scaled_top_lefts(t, i, length, patt)
+		ll, pp, _ = self.getWord(i + 1)
 
 		cells = []
 		mtl = partial(self.make_top_lefts, i=i+1, length=ll, patt=pp)
