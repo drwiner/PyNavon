@@ -9,47 +9,16 @@ import math
 
 Pattern = namedtuple('Pattern', ['length', 'positions', 'center'])
 
-pat_A = Pattern(length=12,
-                positions=np.array([(5,0),(6,0),(5,1),(6,1),(4,2),(5,2),(6,2),(7,2),(4,3),(5,3),(6,3),(7,3),(3,4),(4,4),(7,4),(8,4),(3,5),(4,5),(7,5),(8,5),(2,6),(3,6),(4,6),(5,6),(6,6),(7,6),(8,6),(9,6),(2,7),(3,7),(4,7),(5,7),(6,7),(7,7),(8,7),(9,7),(1,8),(2,8),(9,8),(10,8),(1,9),(2,9),(9,9),(10,9),(0,10),(1,10),(10,10),(11,10),(0,11),(1,11),(10,11),(11,11)]),
-                center=(5, 6))
-
-# _,pos = pat_A
-# cell_A = np.array([(i, 1200-j) for i, j in pos])
-
-
-pat_C = Pattern(length=12,
-                positions=np.array([(0,4),(0,5),(0,6),(0,7),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8),(2,2),(2,3),(2,4),(2,7),(2,8),(2,9),(3,1),(3,2),(3,3),(3,8),(3,9),(3,10),(4,0),(4,1),(4,2),(4,9),(4,10),(4,11),(5,0),(5,1),(6,0),(6,1),(7,0),(7,1),(8,0),(8,1),(5,11),(5,10),(6,11),(6,10),(7,11),(7,10),(8,11),(8,10),(9,11),(9,10),(9,9),(10,10),(10,9),(10,8),(9,0),(9,1),(9,2),(9,3),(9,8),(10,1),(10,2),(10,3)]),
-                center=(3, 8))
-
-# _,pos = pat_C
-# cell_C = np.array([(i,1200-j) for i,j in pos])
-
-
-pat_T = Pattern(length=12,
-                positions=np.array([(1,0),(2,0),(3,0),(4,0),(5,0),(6,0),(7,0),(8,0),(9,0),(10,0),(1,1),(2,1),(3,1),(4,1),(5,1),(6,1),(7,1),(8,1),(9,1),(10,1),(1,2),(10,2),(5,2),(5,3),(5,4),(5,5),(5,6),(5,7),(5,8),(5,9),(5,10),(6,2),(6,3),(6,4),(6,5),(6,6),(6,7),(6,8),(6,9),(6,10),(3,10),(4,9),(4,10),(7,9),(7,10),(8,10)]),
-                center=(5, 5))
-
-# _,pos = pat_T
-# cell_T = np.array([(i,1200-j) for i,j in pos])
-
-
-#pat_test = Pattern(2, positions=np.array([(0,0), (1,1)]))
+pat_A = Pattern(length=12,positions=np.array([(5,0),(6,0),(5,1),(6,1),(4,2),(5,2),(6,2),(7,2),(4,3),(5,3),(6,3),(7,3),(3,4),(4,4),(7,4),(8,4),(3,5),(4,5),(7,5),(8,5),(2,6),(3,6),(4,6),(5,6),(6,6),(7,6),(8,6),(9,6),(2,7),(3,7),(4,7),(5,7),(6,7),(7,7),(8,7),(9,7),(1,8),(2,8),(9,8),(10,8),(1,9),(2,9),(9,9),(10,9),(0,10),(1,10),(10,10),(11,10),(0,11),(1,11),(10,11),(11,11)]),center=(5, 6))
+pat_C = Pattern(length=12, positions=np.array([(0,4),(0,5),(0,6),(0,7),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8),(2,2),(2,3),(2,4),(2,7),(2,8),(2,9),(3,1),(3,2),(3,3),(3,8),(3,9),(3,10),(4,0),(4,1),(4,2),(4,9),(4,10),(4,11),(5,0),(5,1),(6,0),(6,1),(7,0),(7,1),(8,0),(8,1),(5,11),(5,10),(6,11),(6,10),(7,11),(7,10),(8,11),(8,10),(9,11),(9,10),(9,9),(10,10),(10,9),(10,8),(9,0),(9,1),(9,2),(9,3),(9,8),(10,1),(10,2),(10,3)]), center=(3, 8))
+pat_T = Pattern(length=12,positions=np.array([(1,0),(2,0),(3,0),(4,0),(5,0),(6,0),(7,0),(8,0),(9,0),(10,0),(1,1),(2,1),(3,1),(4,1),(5,1),(6,1),(7,1),(8,1),(9,1),(10,1),(1,2),(10,2),(5,2),(5,3),(5,4),(5,5),(5,6),(5,7),(5,8),(5,9),(5,10),(6,2),(6,3),(6,4),(6,5),(6,6),(6,7),(6,8),(6,9),(6,10),(3,10),(4,9),(4,10),(7,9),(7,10),(8,10)]),center=(5, 5))
 
 word = [pat_T, pat_C, pat_A]
-#cell_worlds = [cell_T, cell_C, cell_A]
-
-class Cell:
-	def __init__(self, numpy_coord, size):
-		self.coordinate = numpy_coord
-		self.size = size
-
-	def get_cells(self):
-		return [self]
 
 class Host:
-	def __init__(self, cell, letter_pos, levels):
-		self.coordinate = cell.coordinate
-		self.size = cell.size
+	def __init__(self, numpy_coord, size, letter_pos, levels):
+		self.coordinate = numpy_coord
+		self.size = size
 		self.levels = levels
 		self.top_level = 0
 		self.pointsize = 1.0
@@ -60,13 +29,12 @@ class Host:
 	def grow(self):
 		if self.size > 8000:
 			self.expand()
+		else:
+			self.size += (self.size / 24)
+			self.coordinate = self.coordinate + (self.center - self.get_center())
+			self.updateField()
+			self.center = self.get_center()
 
-		self.size += (self.size / 24)
-		self.coordinate = self.coordinate + (self.center - self.get_center())
-		self.updateField()
-		self.center = self.get_center()
-
-	@clock
 	def get_center(self):
 		L, _, C = self.getWord(self.top_level)
 		size = self.size / L
@@ -102,8 +70,10 @@ class Host:
 		length_0, patt_0, _ = word[self.top_level]
 		return self.make_top_lefts(self.coordinate, 0, length_0, patt_0)
 
+	def upgrade(self):
+		return self.center - [self.size/2, self.size/2]
 
-	@clock
+	#@clock
 	def updateField(self):
 		self.field = np.array(self.recursive_strategy())
 
@@ -112,26 +82,12 @@ class Host:
 		if self.top_level >= len(word):
 			self.top_level = 0
 
-		#top_lefts = self.top_range()
-		self.size = self.size / 12
-		#pass the torch
-		self.coordinate = self.center
+		self.size /= 12
+		self.coordinate = self.upgrade()
 		self.center = self.get_center()
 
-
-
-def initial_config():
-	C = Cell(np.array([0, 0]), 1200)
-	H = Host(C, 0, 2)
-	return H
-
-def find_nearest(array,value):
-    idx = (np.abs(value-array)).argmin()
-    return array[idx]
-
-
 window = pyglet.window.Window(1200,1200)
-H = initial_config()
+H = Host(np.array([0, 0]), 1200, 0, 2)
 
 #@clock
 def drawArray(someArray):
@@ -143,7 +99,6 @@ def drawArray(someArray):
 def on_draw():
 	gl.glPointSize(H.pointsize)
 	gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
-	# points = np.random.random((50,5))*np.array([400,400,1,1,1])
 	drawArray(H.field)
 
 def update(dt):
