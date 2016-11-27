@@ -24,9 +24,7 @@ class Host:
 	def displacement(self):
 		return (np.array([SCREENSIZE/2, SCREENSIZE/2]) - self.center) / 24
 
-	#@clock
 	def grow(self):
-		print('grow')
 		if self.size > EXPAND_THRESHOLD:
 			self.expand()
 		else:
@@ -36,22 +34,14 @@ class Host:
 			self.center = self.get_center(self.top_level)
 			self.center += self.displacement()
 			self.pointsize += self.pointsize/GROWTH
-			#print(self.pointsize)
 
 	def get_center(self, level):
-		print('get_center')
 		L, _, C = self.getWord(level)
 		size = self.size / L
 		return self.coordinate + C * np.array([size, size]) + np.array([size/2, size/2])
 
 	def getWord(self, i):
-		print('getword: ', i)
-		#print(i, ((self.top_level + i) % len(WORD)), i%len(WORD))
-		print(WORD[i%len(WORD)].name)
-
-		#return WORD[((self.top_level + i) % len(WORD))]
 		return WORD[i%len(WORD)].astuple()
-		# return WORD[i % len(WORD)]
 
 	def scaled_top_lefts(self, start_at, level, length, patt):
 		size = self.size / math.pow(length, level)
@@ -79,8 +69,7 @@ class Host:
 		return p
 
 	def recursive_strategy(self):
-		print('recursive_strategy')
-		length_0, patt_0, _ = self.getWord(self.top_level) #self.getWord(self.top_level) #WORD[self.top_level%len(WORD)]
+		length_0, patt_0, _ = self.getWord(self.top_level)
 		return self.make_top_lefts(self.coordinate, 0, length_0, patt_0)
 
 	def upgrade(self):
@@ -90,14 +79,8 @@ class Host:
 		self.field = np.array(self.recursive_strategy())
 
 	def expand(self):
-		print('expand')
 		self.top_level += 1
-		#WORD.replaceCenters()
 		WORD[self.top_level%len(WORD)].replaceCenter()
-
-		#if self.top_level >= len(WORD):
-		#	self.top_level = 0
-		#print(self.top_level, self.top_level % 3)
 		self.size /= 12
 		self.coordinate = self.upgrade()
 		self.center = self.get_center(self.top_level)
