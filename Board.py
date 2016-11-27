@@ -1,21 +1,12 @@
 import numpy as np; import ctypes
 import pyglet; import pyglet.gl as gl
 from clockdeco import clock
-from collections import namedtuple
 from functools import partial
-import time
 import math
+from Pattern import WORD as WD
 
+WORD = WD()
 
-Pattern = namedtuple('Pattern', ['length', 'positions', 'center'])
-
-pat_A = Pattern(length=12,positions=np.array([(5,0),(6,0),(5,1),(6,1),(4,2),(5,2),(6,2),(7,2),(4,3),(5,3),(6,3),(7,3),(3,4),(4,4),(7,4),(8,4),(3,5),(4,5),(7,5),(8,5),(2,6),(3,6),(4,6),(5,6),(6,6),(7,6),(8,6),(9,6),(2,7),(3,7),(4,7),(5,7),(6,7),(7,7),(8,7),(9,7),(1,8),(2,8),(9,8),(10,8),(1,9),(2,9),(9,9),(10,9),(0,10),(1,10),(10,10),(11,10),(0,11),(1,11),(10,11),(11,11)]),center=np.array([5, 0]))
-pat_C = Pattern(length=12, positions=np.array([(0,4),(0,5),(0,6),(0,7),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8),(2,2),(2,3),(2,4),(2,7),(2,8),(2,9),(3,1),(3,2),(3,3),(3,8),(3,9),(3,10),(4,0),(4,1),(4,2),(4,9),(4,10),(4,11),(5,0),(5,1),(6,0),(6,1),(7,0),(7,1),(8,0),(8,1),(5,11),(5,10),(6,11),(6,10),(7,11),(7,10),(8,11),(8,10),(9,11),(9,10),(9,9),(10,10),(10,9),(10,8),(9,0),(9,1),(9,2),(9,3),(9,8),(10,1),(10,2),(10,3)]), center=np.array([5, 0]))
-pat_T = Pattern(length=12,positions=np.array([(1,0),(2,0),(3,0),(4,0),(5,0),(6,0),(7,0),(8,0),(9,0),(10,0),(1,1),(2,1),(3,1),(4,1),(5,1),(6,1),(7,1),(8,1),(9,1),(10,1),(1,2),(10,2),(5,2),(5,3),(5,4),(5,5),(5,6),(5,7),(5,8),(5,9),(5,10),(6,2),(6,3),(6,4),(6,5),(6,6),(6,7),(6,8),(6,9),(6,10),(3,10),(4,9),(4,10),(7,9),(7,10),(8,10)]),center=np.array([5, 0]))
-pat_hyphen = Pattern(length=12, positions=np.array([(i, 5) for i in range(1,12)] + [(i,6) for i in range(1,12)]), center=np.array([6,6]))
-pat_full = Pattern(length=12, positions=np.array([(i,j) for i in range(12) for j in range(12)]), center=np.array([6,6]))
-
-WORD = [pat_T, pat_C, pat_A]
 EXPAND_THRESHOLD = 8000
 GROWTH = 12
 SCREENSIZE = 1200
@@ -28,31 +19,37 @@ class Host:
 		self.top_level = 0
 		self.pointsize = 1.0
 		self.updateField()
-		self.center = self.get_center(self.top_level-1)
+		self.center = self.get_center(self.top_level)
 
 	def displacement(self):
 		return (np.array([SCREENSIZE/2, SCREENSIZE/2]) - self.center) / 24
 
 	#@clock
 	def grow(self):
+		print('grow')
 		if self.size > EXPAND_THRESHOLD:
 			self.expand()
 		else:
 			self.size += (self.size / GROWTH)
-			self.coordinate = self.coordinate + (self.center - self.get_center(self.top_level-1))
+			self.coordinate = self.coordinate + (self.center - self.get_center(self.top_level))
 			self.updateField()
-			self.center = self.get_center(self.top_level-1)
+			self.center = self.get_center(self.top_level)
 			self.center += self.displacement()
 			self.pointsize += self.pointsize/GROWTH
-			print(self.pointsize)
+			#print(self.pointsize)
 
 	def get_center(self, level):
+		print('get_center')
 		L, _, C = self.getWord(level)
 		size = self.size / L
 		return self.coordinate + C * np.array([size, size]) + np.array([size/2, size/2])
 
 	def getWord(self, i):
-		return WORD[((self.top_level + i) % len(WORD))]
+		print('getword: ', i)
+		#print(i, ((self.top_level + i) % len(WORD)), i%len(WORD))
+		print(WORD[i%len(WORD)].name)
+		#return WORD[((self.top_level + i) % len(WORD))]
+		return WORD[i%len(WORD)].astuple()
 		# return WORD[i % len(WORD)]
 
 	def scaled_top_lefts(self, start_at, level, length, patt):
@@ -60,11 +57,12 @@ class Host:
 		return start_at + patt * (size/length)
 
 	def make_top_lefts(self, t, i, length, patt):
+
 		if i >= self.levels:
 			return self.make_cells(t, i, length, patt)
 
 		p_1 = self.scaled_top_lefts(t, i, length, patt)
-		ll, pp, _ = self.getWord(i + 1)
+		ll, pp, _ = self.getWord(i+self.top_level+1)
 
 		cells = []
 		mtl = partial(self.make_top_lefts, i=i+1, length=ll, patt=pp)
@@ -73,13 +71,15 @@ class Host:
 		return cells
 
 	def make_cells(self, t, i, length, patt):
-		size = int(self.size / math.pow(length, i))
+
+		size = self.size / math.pow(length, i)
 		p = t + patt * (size / length)
 		p[:][:, 1] = SCREENSIZE - p[:][:, 1]
 		return p
 
 	def recursive_strategy(self):
-		length_0, patt_0, _ = WORD[self.top_level] #self.getWord(self.top_level) #WORD[self.top_level%len(WORD)]
+		print('recursive_strategy')
+		length_0, patt_0, _ = self.getWord(self.top_level) #self.getWord(self.top_level) #WORD[self.top_level%len(WORD)]
 		return self.make_top_lefts(self.coordinate, 0, length_0, patt_0)
 
 	def upgrade(self):
@@ -89,14 +89,15 @@ class Host:
 		self.field = np.array(self.recursive_strategy())
 
 	def expand(self):
+		print('expand')
 		self.top_level += 1
-		print(self.top_level, self.top_level % 3)
-		if self.top_level >= len(WORD):
-			self.top_level = 0
 
+		#if self.top_level >= len(WORD):
+		#	self.top_level = 0
+		#print(self.top_level, self.top_level % 3)
 		self.size /= 12
 		self.coordinate = self.upgrade()
-		self.center = self.get_center(self.top_level-1)
+		self.center = self.get_center(self.top_level)
 		self.pointsize = 0.3
 
 window = pyglet.window.Window(SCREENSIZE,SCREENSIZE)
