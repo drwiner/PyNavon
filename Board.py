@@ -8,7 +8,7 @@ from Pattern import WORD as WD
 WORD = WD()
 
 EXPAND_THRESHOLD = 8000
-GROWTH = 12
+GROWTH = 6
 SCREENSIZE = 1200
 
 class Host:
@@ -22,7 +22,7 @@ class Host:
 		self.center = self.get_center(self.top_level)
 
 	def displacement(self):
-		return (np.array([SCREENSIZE/2, SCREENSIZE/2]) - self.center) / 24
+		return (np.array([SCREENSIZE/2, SCREENSIZE/2]) - self.center) / (GROWTH*2)
 
 	def grow(self):
 		if self.size > EXPAND_THRESHOLD:
@@ -68,6 +68,7 @@ class Host:
 		p[:][:, 1] = SCREENSIZE - p[:][:, 1]
 		return p
 
+	@clock
 	def recursive_strategy(self):
 		length_0, patt_0, _ = self.getWord(self.top_level)
 		return self.make_top_lefts(self.coordinate, 0, length_0, patt_0)
@@ -89,7 +90,7 @@ class Host:
 window = pyglet.window.Window(SCREENSIZE,SCREENSIZE)
 H = Host(np.array([0, 0]), SCREENSIZE, 0, 2)
 
-#@clock
+# @clock
 def drawArray(someArray):
 	vertPoints = someArray[:, :2].flatten().astype(ctypes.c_float)
 	gl.glVertexPointer(2, gl.GL_FLOAT, 0, vertPoints.ctypes.data)
