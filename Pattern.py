@@ -1,4 +1,5 @@
 import numpy as np
+import random as rand
 
 class Pattern:
 	def __init__(self, name, length, positions, center):
@@ -9,6 +10,10 @@ class Pattern:
 
 	def astuple(self):
 		return (self.length, self.positions, self.center)
+
+	def replaceCenter(self):
+		self.center = self.positions[rand.randint(0,self.length)]
+		#self.center = set(list(self.positions)).pop()
 
 
 pat_A = Pattern(name='A', length=12, positions=np.array([(5,0),(6,0),(5,1),(6,1),(4,2),(5,2),(6,2),(7,2),(4,3),(5,3),(6,3),(7,3),(3,4),(4,4),(7,4),(8,4),(3,5),(4,5),(7,5),(8,5),(2,6),(3,6),(4,6),(5,6),(6,6),(7,6),(8,6),(9,6),(2,7),(3,7),(4,7),(5,7),(6,7),(7,7),(8,7),(9,7),(1,8),(2,8),(9,8),(10,8),(1,9),(2,9),(9,9),(10,9),(0,10),(1,10),(10,10),(11,10),(0,11),(1,11),(10,11),(11,11)]),center=np.array([5, 0]))
@@ -21,9 +26,13 @@ pat_hyphen = Pattern(name='hyphen', length=12, positions=np.array([(i, 5) for i 
 pat_full = Pattern(name='full', length=12, positions=np.array([(i, j) for i in range(12) for j in range(12)]), center=np.array([6,6]))
 
 class WORD:
-	wd = [pat_A, pat_C, pat_T]
+	wd = [pat_A, pat_C, pat_T, pat_hyphen]
 	def __len__(self):
 		return len(self.wd)
 
 	def __getitem__(self, pos):
 		return self.wd[pos]
+
+	def replaceCenters(self):
+		for wd in self.wd:
+			wd.replaceCenter()

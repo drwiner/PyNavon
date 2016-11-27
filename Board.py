@@ -48,6 +48,7 @@ class Host:
 		print('getword: ', i)
 		#print(i, ((self.top_level + i) % len(WORD)), i%len(WORD))
 		print(WORD[i%len(WORD)].name)
+
 		#return WORD[((self.top_level + i) % len(WORD))]
 		return WORD[i%len(WORD)].astuple()
 		# return WORD[i % len(WORD)]
@@ -91,6 +92,8 @@ class Host:
 	def expand(self):
 		print('expand')
 		self.top_level += 1
+		#WORD.replaceCenters()
+		WORD[self.top_level%len(WORD)].replaceCenter()
 
 		#if self.top_level >= len(WORD):
 		#	self.top_level = 0
