@@ -10,7 +10,7 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(
-    name = "an_example_pypi_project",
+    name = "A Decompositional Word Visualization",
     version = "1.0",
     author = "David Winer",
     author_email = "drwiner@cs.utah.edu",
@@ -20,7 +20,6 @@ setup(
     url = "www.github.com/drwiner/pynavon",
 	py_modules=['Board', 'Pattern'],
     packages=find_packages(),
-    long_description=read('README'),
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Topic :: Utilities",

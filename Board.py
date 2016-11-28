@@ -6,9 +6,10 @@ import math
 from Pattern import WORD as WD
 
 WORD = WD()
+wd_lens = WORD.wd_lens()
 
-EXPAND_THRESHOLD = 8000
-GROWTH = 6
+EXPAND_THRESHOLD = 4000
+GROWTH = 24
 SCREENSIZE = 1200
 
 class Host:
@@ -28,6 +29,7 @@ class Host:
 		if self.size > EXPAND_THRESHOLD:
 			self.expand()
 		else:
+			#pass
 			self.size += (self.size / GROWTH)
 			self.coordinate = self.coordinate + (self.center - self.get_center(self.top_level))
 			self.updateField()
@@ -44,7 +46,8 @@ class Host:
 		return WORD[i%len(WORD)].astuple()
 
 	def scaled_top_lefts(self, start_at, level, length, patt):
-		size = self.size / math.pow(length, level)
+	#	size = self.size / math.pow(length, level)
+		size = self.size / WORD.get_size(level, self.top_level)
 		return start_at + patt * (size/length)
 
 	def make_top_lefts(self, t, i, length, patt):
@@ -63,12 +66,12 @@ class Host:
 
 	def make_cells(self, t, i, length, patt):
 
-		size = self.size / math.pow(length, i)
+		size = self.size / WORD.get_size(i, self.top_level)
 		p = t + patt * (size / length)
 		p[:][:, 1] = SCREENSIZE - p[:][:, 1]
 		return p
 
-	@clock
+#	@clock
 	def recursive_strategy(self):
 		length_0, patt_0, _ = self.getWord(self.top_level)
 		return self.make_top_lefts(self.coordinate, 0, length_0, patt_0)
@@ -81,11 +84,13 @@ class Host:
 
 	def expand(self):
 		self.top_level += 1
-		WORD[self.top_level%len(WORD)].replaceCenter()
-		self.size /= 12
+		letter = WORD[self.top_level % len(WORD)]
+		letter.replaceCenter()
+		#self.size /= letter.length
+		self.size /= wd_lens[(self.top_level-1)%len(WORD)]
 		self.coordinate = self.upgrade()
 		self.center = self.get_center(self.top_level)
-		self.pointsize = 0.3
+		self.pointsize = 1.3
 
 window = pyglet.window.Window(SCREENSIZE,SCREENSIZE)
 H = Host(np.array([0, 0]), SCREENSIZE, 0, 2)
