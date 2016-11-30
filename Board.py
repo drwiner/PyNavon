@@ -4,13 +4,44 @@ from clockdeco import clock
 from functools import partial
 import math
 from Pattern import WORD as WD
+import sys
 
-WORD = WD()
-wd_lens = WORD.wd_lens()
 
 EXPAND_THRESHOLD = 4000
 GROWTH = 24
 SCREENSIZE = 1200
+
+window = pyglet.window.Window(SCREENSIZE,SCREENSIZE)
+batch = pyglet.graphics.Batch()
+
+from pyglet_gui.manager import Manager
+from pyglet_gui.text_input import TextInput
+from pyglet_gui.theme import Theme
+
+theme = Theme({"font": "Lucida Grande",
+			   "font_size": 12,
+			   "text_color": [255, 255, 255, 255],
+			   "gui_color": [255, 0, 0, 255],
+			   "input": {
+				   "image": {
+					   "source": "input.png",
+					   "frame": [3, 3, 2, 2],
+					   "padding": [3, 3, 2, 3]
+				   },
+				   # need a focus color
+				   "focus_color": [255, 255, 255, 64],
+				   "focus": {
+					   "image": {
+						   "source": "input-highlight.png"
+					   } }}
+			  }, resources_path='theme/')
+
+z = TextInput(text=letters)
+Manager(z, window=window, batch=batch, theme=theme)
+Manager.set_position(z, x=SCREENSIZE-300, y=SCREENSIZE-50)
+
+WORD = WD()
+wd_lens = WORD.wd_lens()
 
 class Host:
 	def __init__(self, numpy_coord, size, letter_pos, levels):
@@ -35,7 +66,7 @@ class Host:
 			self.updateField()
 			self.center = self.get_center(self.top_level)
 			self.center += self.displacement()
-			self.pointsize += self.pointsize/GROWTH
+			self.pointsize += self.pointsize/(GROWTH*2)
 
 	def get_center(self, level):
 		L, _, C = self.getWord(level)
@@ -92,7 +123,6 @@ class Host:
 		self.center = self.get_center(self.top_level)
 		self.pointsize = 1.3
 
-window = pyglet.window.Window(SCREENSIZE,SCREENSIZE)
 H = Host(np.array([0, 0]), SCREENSIZE, 0, 2)
 
 # @clock
@@ -112,8 +142,15 @@ def update(dt):
 	H.grow()
 	gl.glPointSize(H.pointsize)
 	drawArray(H.field)
+	batch.draw()
 
+if __name__ == '__main__':
+	if len(sys.argv) < 2:
+		letters = 'abcdefghijklmnopqrstuvwxyz'
+	else:
+		letters = sys.argv[2]
 
-pyglet.clock.schedule_interval(update, 1/120.0)
-pyglet.app.run()
+	H = Host(np.array([0, 0]), SCREENSIZE, 0, 2)
+	pyglet.clock.schedule_interval(update, 1/120.0)
+	pyglet.app.run()
 
