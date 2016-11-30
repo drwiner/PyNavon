@@ -12,7 +12,10 @@ class Pattern:
 		return (self.length, self.positions, self.center)
 
 	def replaceCenter(self):
-		self.center = self.positions[rand.randint(0,self.length)]
+		try:
+			self.center = self.positions[rand.randint(0,self.length)]
+		except:
+			pass
 
 A_6 = Pattern(name='A', length=6, positions=np.array([(2,0),(1,1),(3,1), (1,2), (3,2), (0,3), (1,3), (2,3), (3,3), (4,3), (4,3), (0,4), (4,4)]), center=np.array([2,3]))
 B_6 = Pattern(name='B', length=6, positions=np.array([(0,0),(1,0),(0,1),(2,1),(0,2),(1,2),(2,2),(3,2),(3,2), (0,3), (3,3),(0,4),(1,4),(2,4)]), center=np.array([0,3]))
@@ -41,8 +44,11 @@ X_6 = Pattern(name='X', length=6, positions=np.array([(0,0), (1,1), (2,2), (3,3)
 Y_6 = Pattern(name='Y', length=6, positions=np.array([(0,0), (1,1), (2,2), (2,3), (2,4), (3,1), (4,0)]), center=np.array([4,0]))
 Z_6 = Pattern(name='Z', length=6, positions=np.array([(0,0), (1,0), (2,0), (3,0), (4,0), (4,1), (3,2), (2, 2), (1, 3), (0,4), (1,4), (2,4), (3,4), (4,4)]), center=np.array([4,4]))
 
-alphabet = [A_6, B_6, C_6, D_6, E_6, F_6, G_6, H_6, I_6, J_6, K_6, L_6, M_6, N_6, O_6, P_6, Q_6, R_6, S_6, T_6, U_6, V_6, W_6, X_6, Y_6, Z_6]
+space_6 = Pattern(name='space', length=6, positions=np.array([(2,2)]), center=np.array([2,2]))
+
+alphabet = [A_6, B_6, C_6, D_6, E_6, F_6, G_6, H_6, I_6, J_6, K_6, L_6, M_6, N_6, O_6, P_6, Q_6, R_6, S_6, T_6, U_6, V_6, W_6, X_6, Y_6, Z_6, space_6]
 available_letters = 'a b c d e f g h i j k l m n o p q r s t u v w x y z'.split()
+available_letters.append(' ')
 
 alpha_dict = dict(zip(available_letters, alphabet))
 
@@ -57,6 +63,9 @@ pat_full = Pattern(name='full', length=12, positions=np.array([(i, j) for i in r
 
 class WORD:
 	wd = alphabet
+
+	def __init__(self, letters):
+		self.wd = [alpha_dict[i] for i in letters]
 
 	def __len__(self):
 		return len(self.wd)

@@ -23,6 +23,7 @@ theme = Theme({"font": "Lucida Grande",
 			   "text_color": [255, 255, 255, 255],
 			   "gui_color": [255, 0, 0, 255],
 			   "input": {
+				#	"text" : letters,
 				   "image": {
 					   "source": "input.png",
 					   "frame": [3, 3, 2, 2],
@@ -35,15 +36,11 @@ theme = Theme({"font": "Lucida Grande",
 						   "source": "input-highlight.png"
 					   } }}
 			  }, resources_path='theme/')
-
-z = TextInput(text=letters)
-Manager(z, window=window, batch=batch, theme=theme)
-Manager.set_position(z, x=SCREENSIZE-300, y=SCREENSIZE-50)
-
-WORD = WD()
-wd_lens = WORD.wd_lens()
-
+letters = "hello world"
 class Host:
+	WORD = WD(letters)
+	wd_lens = WORD.wd_lens()
+
 	def __init__(self, numpy_coord, size, letter_pos, levels):
 		self.coordinate = numpy_coord
 		self.size = size
@@ -74,11 +71,11 @@ class Host:
 		return self.coordinate + C * np.array([size, size]) + np.array([size/2, size/2])
 
 	def getWord(self, i):
-		return WORD[i%len(WORD)].astuple()
+		return self.WORD[i%len(self.WORD)].astuple()
 
 	def scaled_top_lefts(self, start_at, level, length, patt):
 	#	size = self.size / math.pow(length, level)
-		size = self.size / WORD.get_size(level, self.top_level)
+		size = self.size / self.WORD.get_size(level, self.top_level)
 		return start_at + patt * (size/length)
 
 	def make_top_lefts(self, t, i, length, patt):
@@ -97,7 +94,7 @@ class Host:
 
 	def make_cells(self, t, i, length, patt):
 
-		size = self.size / WORD.get_size(i, self.top_level)
+		size = self.size / self.WORD.get_size(i, self.top_level)
 		p = t + patt * (size / length)
 		p[:][:, 1] = SCREENSIZE - p[:][:, 1]
 		return p
@@ -115,15 +112,38 @@ class Host:
 
 	def expand(self):
 		self.top_level += 1
-		letter = WORD[self.top_level % len(WORD)]
+		letter = self.WORD[self.top_level % len(self.WORD)]
 		letter.replaceCenter()
 		#self.size /= letter.length
-		self.size /= wd_lens[(self.top_level-1)%len(WORD)]
+		self.size /= self.wd_lens[(self.top_level-1)%len(self.WORD)]
 		self.coordinate = self.upgrade()
 		self.center = self.get_center(self.top_level)
 		self.pointsize = 1.3
 
+
 H = Host(np.array([0, 0]), SCREENSIZE, 0, 2)
+
+class Letters(TextInput):
+
+	def on_text(self, text):
+		assert self.is_focus()
+
+
+		self._caret.on_text(text)
+		if self._max_length and len(self._document.text) > self._max_length:
+			self._document.text = self._document.text[:self._max_length]
+			self._caret.mark = self._caret.position = self._max_length
+
+		print(self._document.text)
+		H.WORD = WD(self._document.text.lower())
+		H.wd_lens = H.WORD.wd_lens()
+		return pyglet.event.EVENT_HANDLED
+
+
+#z = TextInput(text="abcdefghijklmnopqrstuvwxyz")
+z = Letters(text=letters)
+Manager(z, window=window, batch=batch, theme=theme)
+Manager.set_position(z, x=SCREENSIZE-300, y=SCREENSIZE-50)
 
 # @clock
 def drawArray(someArray):
