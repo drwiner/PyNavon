@@ -4,10 +4,10 @@ from clockdeco import clock
 from functools import partial
 import math
 from Pattern import WORD as WD
-import sys
 
 
-EXPAND_THRESHOLD = 4000
+
+EXPAND_THRESHOLD = 6000
 GROWTH = 24
 SCREENSIZE = 1200
 
@@ -34,7 +34,29 @@ theme = Theme({"font": "Lucida Grande",
 				   "focus": {
 					   "image": {
 						   "source": "input-highlight.png"
-					   } }}
+					   } }},
+				"slider": {
+                   "knob": {
+                       "image": {
+                           "source": "slider-knob.png"
+                       },
+                       "offset": [-5, -11]
+                   },
+                   "padding": [8, 8, 8, 8],
+                   "step": {
+                       "image": {
+                           "source": "slider-step.png"
+                       },
+                       "offset": [-2, -8]
+                   },
+                   "bar": {
+                       "image": {
+                           "source": "slider-bar.png",
+                           "frame": [8, 8, 8, 0],
+                           "padding": [8, 8, 8, 8]
+                       }
+                   }
+               },
 			  }, resources_path='theme/')
 letters = "hello world"
 class Host:
@@ -49,6 +71,7 @@ class Host:
 		self.pointsize = 1.0
 		self.updateField()
 		self.center = self.get_center(self.top_level)
+		self.zoom_mode = True
 
 	def displacement(self):
 		return (np.array([SCREENSIZE/2, SCREENSIZE/2]) - self.center) / (GROWTH*2)
@@ -58,12 +81,13 @@ class Host:
 			self.expand()
 		else:
 			#pass
-			self.size += (self.size / GROWTH)
-			self.coordinate = self.coordinate + (self.center - self.get_center(self.top_level))
-			self.updateField()
-			self.center = self.get_center(self.top_level)
-			self.center += self.displacement()
-			self.pointsize += self.pointsize/(GROWTH*2)
+			if self.zoom_mode:
+				self.size += (self.size / GROWTH)
+				self.coordinate = self.coordinate + (self.center - self.get_center(self.top_level))
+				self.updateField()
+				self.center = self.get_center(self.top_level)
+				self.center += self.displacement()
+				self.pointsize += self.pointsize/(GROWTH*2)
 
 	def get_center(self, level):
 		L, _, C = self.getWord(level)
@@ -123,12 +147,14 @@ class Host:
 
 H = Host(np.array([0, 0]), SCREENSIZE, 0, 2)
 
+from pyglet_gui.containers import VerticalContainer
+
+from pyglet_gui.sliders import HorizontalSlider
+
 class Letters(TextInput):
 
 	def on_text(self, text):
 		assert self.is_focus()
-
-
 		self._caret.on_text(text)
 		if self._max_length and len(self._document.text) > self._max_length:
 			self._document.text = self._document.text[:self._max_length]
@@ -139,12 +165,30 @@ class Letters(TextInput):
 		H.wd_lens = H.WORD.wd_lens()
 		return pyglet.event.EVENT_HANDLED
 
+class SpeedSlider(HorizontalSlider):
+	def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
+		bar_x, bar_y, bar_width, bar_height = self._bar.get_content_region()
+		self.set_knob_pos(float(x - bar_x) / bar_width)
+		global GROWTH
+		GROWTH = 24 - (float(x - bar_x) / bar_width)
+		print(GROWTH, (float(x - bar_x) / bar_width))
+		return True
 
-#z = TextInput(text="abcdefghijklmnopqrstuvwxyz")
-z = Letters(text=letters)
-Manager(z, window=window, batch=batch, theme=theme)
-Manager.set_position(z, x=SCREENSIZE-300, y=SCREENSIZE-50)
+def f(value):
+	print(value)
+	global GROWTH
+	if value <= 2:
+		H.zoom_mode = False
+	else:
+		H.zoom_mode = True
+		GROWTH = 100 - value
 
+L = Letters(text=letters)
+HS = HorizontalSlider(value=12, min_value=1.0, max_value=99.9, width=150, on_set=f)
+
+Manager(VerticalContainer([HS, L]), window=window, batch=batch, theme=theme)
+Manager.set_position(L, x=SCREENSIZE-300, y=SCREENSIZE-50)
+Manager.set_position(HS, x=SCREENSIZE-300, y=SCREENSIZE-100)
 # @clock
 def drawArray(someArray):
 	vertPoints = someArray[:, :2].flatten().astype(ctypes.c_float)
@@ -165,12 +209,7 @@ def update(dt):
 	batch.draw()
 
 if __name__ == '__main__':
-	if len(sys.argv) < 2:
-		letters = 'abcdefghijklmnopqrstuvwxyz'
-	else:
-		letters = sys.argv[2]
-
-	H = Host(np.array([0, 0]), SCREENSIZE, 0, 2)
+#	H = Host(np.array([0, 0]), SCREENSIZE, 0, 3)
 	pyglet.clock.schedule_interval(update, 1/120.0)
 	pyglet.app.run()
 
